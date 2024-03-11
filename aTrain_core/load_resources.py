@@ -17,7 +17,7 @@ def download_all_models():
         get_model(model)
 
 def load_model_config_file():
-    models_config_path = str(files("aTrain.models").joinpath("models.json"))
+    models_config_path = str(files("aTrain_core.models").joinpath("models.json"))
     with open(models_config_path, "r") as models_config_file:
         models_config = json.load(models_config_file)
     return models_config
@@ -25,7 +25,7 @@ def load_model_config_file():
 def get_model(model):
     models_config = load_model_config_file()
     model_info = models_config[model]
-    model_path = str(files("aTrain.models").joinpath(model))
+    model_path = str(files("aTrain_core.models").joinpath(model))
     if not os.path.exists(model_path):
         snapshot_download(repo_id=model_info["repo_id"], revision=model_info["revision"], local_dir=model_path, local_dir_use_symlinks=False)
     return model_path
@@ -39,11 +39,11 @@ def get_ffmpeg():
     return ffmpeg_path
 
 def get_ffmpeg_windows():
-    ffmpeg_path = str(files("aTrain").joinpath("ffmpeg.exe"))
+    ffmpeg_path = str(files("aTrain_core").joinpath("ffmpeg.exe"))
     if not os.path.exists(ffmpeg_path):
         url = 'https://github.com/GyanD/codexffmpeg/releases/download/6.0/ffmpeg-6.0-essentials_build.zip'
-        ffmpeg_zip = str(files("aTrain").joinpath("ffmpeg.zip"))
-        ffmpeg_dir = str(files("aTrain").joinpath("ffmpeg_dir"))
+        ffmpeg_zip = str(files("aTrain_core").joinpath("ffmpeg.zip"))
+        ffmpeg_dir = str(files("aTrain_core").joinpath("ffmpeg_dir"))
         ffmpeg_exe = os.path.join(ffmpeg_dir,"ffmpeg-6.0-essentials_build","bin","ffmpeg.exe")
         download_with_progress_bar(url,ffmpeg_zip)
         shutil.unpack_archive(ffmpeg_zip, ffmpeg_dir,"zip")  

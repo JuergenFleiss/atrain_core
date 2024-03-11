@@ -38,7 +38,7 @@ def render_archive():
 
 @app.get("/faq")
 def render_faq():
-    faq_path = str(files("aTrain.faq").joinpath("faq.yaml"))
+    faq_path = str(files("aTrain_core.faq").joinpath("faq.yaml"))
     with open(faq_path,"r", encoding='utf-8') as faq_file:
         faqs = yaml.safe_load(faq_file)
     return render_template("pages/faq.html", faqs = faqs)
@@ -99,7 +99,7 @@ def revert_latest_changes(upload_id):
 @app.get("/openbrowser/<website>")
 def open_browser(website):
     match website:
-        case "github": url = "https://github.com/BANDAS-Center/aTrain"
+        case "github": url = "https://github.com/BANDAS-Center/aTrain-core"
         case "feedback": url = "https://survey.uni-graz.at/index.php/381219"
     webbrowser.open_new(url)
     return ""
@@ -108,7 +108,7 @@ def run_app():
     app_height = int(min([monitor.height for monitor in get_monitors()])*0.8)
     app_width = int(min([monitor.width for monitor in get_monitors()])*0.8)
     try:
-        webview.create_window("aTrain",app,height=app_height,width=app_width)
+        webview.create_window("aTrain_core",app,height=app_height,width=app_width)
         with keep.running():
             webview.start()
     except:
@@ -121,8 +121,8 @@ def run_app():
                 CustomUI(app=app, server="flask", fullscreen=True).run()
 
 def cli():
-    parser = argparse.ArgumentParser(prog='aTrain', description='A GUI tool to transcribe audio with Whisper')
-    parser.add_argument("command", choices=['init', 'start'], help="Command for aTrain to perform.")
+    parser = argparse.ArgumentParser(prog='aTrain_core', description='A GUI tool to transcribe audio with Whisper')
+    parser.add_argument("command", choices=['init', 'start'], help="Command for aTrain_core to perform.")
     args = parser.parse_args()
 
     if args.command == "init":
@@ -130,5 +130,5 @@ def cli():
         download_all_resources()
         print("Finished")
     if args.command == "start":
-        print("Running aTrain")
+        print("Running aTrain_core")
         run_app()

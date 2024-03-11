@@ -2,11 +2,11 @@ venv
 __pycache__
 dist
 build
-aTrain/models/*/
+aTrain-core/models/*/
 tailwind*
 node_modules
 package*
 ffmpeg*
-aTrain.egg-info
+aTrain_core.egg-info
 installer.iss
 prepare_msix.py

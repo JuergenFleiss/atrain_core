@@ -9,12 +9,13 @@ if system == "Darwin":
     torch = "torch==2.0.0"
 
 main_ns = {}
-ver_path = convert_path('aTrain/version.py')
+ver_path = convert_path('aTrain_core/version.py')
+print("Version file path:", ver_path) 
 with open(ver_path) as ver_file:
     exec(ver_file.read(), main_ns)
 
 setup(
-    name='aTrain',
+    name='aTrain_core',
     version=main_ns['__version__'],
     readme="README.md",
     license="LICENSE",
@@ -37,7 +38,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     entry_points={
-        'console_scripts': ['aTrain = aTrain:cli',]
+        'console_scripts': ['aTrain_core = aTrain_core:cli',]
     }
 )
 

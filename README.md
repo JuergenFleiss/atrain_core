@@ -79,16 +79,16 @@ Activate the virtual environment
 ```
 Install aTrain
 ```
-pip install aTrain@git+https://github.com/JuergenFleiss/aTrain.git --extra-index-url https://download.pytorch.org/whl/cu118
+pip install aTrain_core@git+https://github.com/JuergenFleiss/aTrain-core.git --extra-index-url https://download.pytorch.org/whl/cu118
 ```
 Download ffmpeg and all required models from Whisper and pyannote.audio with a console script
 Note: The user version in the Microsoft store has those assets already included. 
 ```
-aTrain init
+aTrain_core init
 ```
 Run the app with the console script
 ```
-aTrain start
+aTrain_core start
 ```
 
 ## How to build a standalone executable 📦
@@ -97,8 +97,8 @@ We use pyinstaller to freeze the code of aTrain and create a standalone executab
 \
 Clone and install aTrain in **editable mode** 
 ```
-git clone https://github.com/JuergenFleiss/aTrain.git
-cd aTrain
+git clone https://github.com/JuergenFleiss/aTrain-core.git
+cd aTrain-core
 pip install -e . --extra-index-url https://download.pytorch.org/whl/cu118
 ```
 \

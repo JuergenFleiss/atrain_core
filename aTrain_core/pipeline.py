@@ -7,7 +7,7 @@ import os
 class CustomPipeline(Pipeline):
     @classmethod
     def from_pretrained(cls,model_path) -> "Pipeline":
-        config_yml = str(files("aTrain.models").joinpath("config.yaml"))
+        config_yml = str(files("aTrain_core.models").joinpath("config.yaml"))
         with open(config_yml, "r") as config_file:
             config = yaml.load(config_file, Loader=yaml.SafeLoader)
         pipeline_name = config["pipeline"]["name"]
