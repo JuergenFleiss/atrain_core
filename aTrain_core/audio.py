@@ -7,7 +7,7 @@ import numpy as np
 import platform
 import sys
 #bug fix: replace faster_whisper audio loading (pyAV) with custom one (ffmpeg)
-sys.modules['faster_whisper.audio'] = __import__("aTrain_core.audio",fromlist=[None]) 
+#sys.modules['faster_whisper.audio'] = __import__("aTrain_core.audio",fromlist=[None]) 
 
 def prepare_audio (file_id,file_path,file_directory):
     ffmpeg_path = get_ffmpeg() #download ffmpeg if it does not exist
