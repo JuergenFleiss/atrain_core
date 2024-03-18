@@ -1,3 +1,5 @@
+""" Keep script for now to check out logic """
+
 from .transcribe import handle_transcription
 from .handle_upload import check_inputs, get_inputs, handle_file
 from .archive import read_archive, create_metadata, delete_transcription, open_file_directory, TIMESTAMP_FORMAT, ATRAIN_DIR
