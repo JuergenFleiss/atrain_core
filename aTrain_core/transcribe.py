@@ -1,6 +1,6 @@
-from .output_files import create_output_files, named_tuple_to_dict, transform_speakers_results
-from .archive import read_metadata, delete_transcription, add_processing_time_to_metadata, TRANSCRIPT_DIR
-from .load_resources import get_model
+from output_files import create_output_files, named_tuple_to_dict, transform_speakers_results
+from archive import read_metadata, delete_transcription, add_processing_time_to_metadata, TRANSCRIPT_DIR
+from load_resources import get_model
 import numpy as np
 import os
 import traceback
@@ -13,25 +13,20 @@ def handle_transcription(file_id):
         prepared_file = os.path.join(file_directory, file_id + ".wav")
         for step in transcribe(prepared_file, model, language, speaker_detection, num_speakers, device, compute_type):
             response = f"data: {step['task']}\n\n"
-            yield response
+            print(response)
         create_output_files(step["result"], speaker_detection, file_directory, filename)
         add_processing_time_to_metadata(file_id)
         os.remove(prepared_file)
-        html = render_template("modals/modal_download.html", file_id=file_id).replace('\n', '')
-        response = f"event: stopstream\ndata: {html}\n\n"
-        yield response
     except Exception as e:
         delete_transcription(file_id)
         traceback_str = traceback.format_exc()
         error = str(e)
-        html = render_template("modals/modal_error.html", error=error, traceback=traceback_str).replace('\n', '')
-        response = f"event: stopstream\ndata: {html}\n\n"
-        yield response
+        print(f"An error has occurred: {traceback_str}")
 
 def transcribe (audio_file, model, language, speaker_detection, num_speakers, device, compute_type):   
     import gc, torch #Import inside the function to speed up the startup time of the destkop app.
     from faster_whisper import WhisperModel
-    from .pipeline import CustomPipeline
+    from pipeline import CustomPipeline
     
     language = None if language == "auto-detect" else language
     min_speakers = max_speakers = None if num_speakers == "auto-detect" else int(num_speakers)

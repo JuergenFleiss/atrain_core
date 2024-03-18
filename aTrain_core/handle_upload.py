@@ -1,16 +1,18 @@
 import os
-from .archive import TRANSCRIPT_DIR
-from .audio import prepare_audio, get_audio_duration
+import shutil
+from archive import TRANSCRIPT_DIR
+from audio import prepare_audio, get_audio_duration
 
-def get_inputs(request):
-    file = request.files["file"]
-    model = request.form.get('model')
-    language = request.form.get('language')
-    speaker_detection = True if request.form.get('speaker_detection') else False
-    num_speakers = request.form.get("num_speakers")
-    device = "GPU" if request.form.get('GPU') else "CPU"
-    compute_type = "float16" if request.form.get('float16') else "int8"
-    return file, model, language, speaker_detection, num_speakers, device, compute_type
+def get_inputs(args):
+    return (
+        args.file,
+        args.model,
+        args.language,
+        args.speaker_detection,
+        args.num_speakers,
+        "GPU" if args.device == "GPU" else "CPU",
+        "float16" if args.compute_type == "float16" else "int8"
+    )
 
 def check_inputs(file, model, language, num_speakers):
     file_correct = check_file(file)
@@ -20,7 +22,11 @@ def check_inputs(file, model, language, num_speakers):
     return file_correct and model_correct and language_correct and num_speakers_correct
 
 def check_file(file):
-    filename = file.filename
+    #if isinstance(file, str):
+    filename = file
+    # else:
+    #     # If 'file' is a FileStorage object (from Flask file upload),
+    #     filename = file.filename
     file_extension = os.path.splitext(filename)[1]
     file_extension_lower = str(file_extension).lower()
     correct_file_formats = ['.3dostr', '.4xm', '.aa', '.aac', '.ac3', '.acm', '.act', '.adf', '.adp', '.ads', '.adx', '.aea', '.afc', '.aiff', '.aix', '.alaw', '.alias_pix', '.alp', '.amr', '.amrnb', '.amrwb', '.anm', '.apc', '.ape', '.apm', '.apng', '.aptx', '.aptx_hd', '.aqtitle', '.argo_asf', '.asf', '.asf_o', '.ass', '.ast', '.au', '.av1', '.avi', '.avr', '.avs', '.avs2', '.bethsoftvid', '.bfi', '.bfstm', '.bin', '.bink', '.bit', '.bmp_pipe', '.bmv', '.boa', '.brender_pix', '.brstm', '.c93', '.caf', '.cavsvideo', '.cdg', '.cdxl', '.cine', '.codec2', '.codec2raw', '.concat', '.data', '.daud', '.dcstr', '.dds_pipe', '.derf', '.dfa', '.dhav', '.dirac', '.dnxhd', '.dpx_pipe', '.dsf', '.dsicin', '.dss', '.dts', '.dtshd', '.dv', '.dvbsub', '.dvbtxt', '.dxa', '.ea', '.ea_cdata', '.eac3', '.epaf', '.exr_pipe', '.f32be', '.f32le', '.f64be', '.f64le', '.fbdev', '.ffmetadata', '.film_cpk', '.filmstrip', '.fits', '.flac', '.flic', '.flv', '.frm', '.fsb', '.fwse', '.g722', '.g723_1', '.g726', '.g726le', '.g729', '.gdv', '.genh', '.gif', '.gif_pipe', '.gsm', '.gxf', '.h261', '.h263', '.h264', '.hca', '.hcom', '.hevc', '.hls', '.hnm', '.ico', '.idcin', '.idf', '.iff', '.ifv', '.ilbc', '.image2', '.image2pipe', '.ingenient', '.ipmovie', '.ircam', '.iss', '.iv8', '.ivf', '.ivr', '.j2k_pipe', '.jacosub', '.jpeg_pipe', '.jpegls_pipe', '.jv', '.kux', '.kvag', '.lavfi', '.live_flv', '.lmlm4', '.loas', '.lrc', '.lvf', '.lxf', '.m4v', '.matroska', '.webm', '.mgsts', '.microdvd', '.mjpeg', '.mjpeg_2000', '.mlp', '.mlv', '.mm', '.mmf', '.mov', '.mp4', '.m4a', '.3gp', '.3g2', '.mj2', '.mkv', '.mp3', '.mpc', '.mpc8', '.mpeg', '.mpegts', '.mpegtsraw', '.mpegvideo', '.mpjpeg', '.mpl2', '.mpsub', '.msf', '.msnwctcp', '.mtaf', '.mtv', '.mulaw', '.musx', '.mv', '.mvi', '.mxf', '.mxg', '.nc', '.nistsphere', '.nsp', '.nsv', '.nut', '.nuv', '.ogg', '.oma', '.oss', '.paf', '.pam_pipe', '.pbm_pipe', '.pcx_pipe', '.pgm_pipe', '.pgmyuv_pipe', '.pictor_pipe', '.pjs', '.pmp', '.png_pipe', '.pp_bnk', '.ppm_pipe', '.psd_pipe', '.psxstr', '.pva', '.pvf', '.qcp', '.qdraw_pipe', '.r3d', '.rawvideo', '.realtext', '.redspark', '.rl2', '.rm', '.roq', '.rpl', '.rsd', '.rso', '.rtp', '.rtsp', '.s16be', '.s16le', '.s24be', '.s24le', '.s32be', '.s32le', '.s337m', '.s8', '.sami', '.sap', '.sbc', '.sbg', '.scc', '.sdp', '.sdr2', '.sds', '.sdx', '.ser', '.sgi_pipe', '.shn', '.siff', '.sln', '.smjpeg', '.smk', '.smush', '.sol', '.sox', '.spdif', '.srt', '.stl', '.subviewer', '.subviewer1', '.sunrast_pipe', '.sup', '.svag', '.svg_pipe', '.swf', '.tak', '.tedcaptions', '.thp', '.tiertexseq', '.tiff_pipe', '.tmv', '.truehd', '.tta', '.tty', '.txd', '.ty', '.u16be', '.u16le', '.u24be', '.u24le', '.u32be', '.u32le', '.u8', '.v210', '.v210x', '.vag', '.vc1', '.vc1test', '.vidc', '.video4linux2', '.v4l2', '.vividas', '.vivo', '.vmd', '.vobsub', '.voc', '.vpk', '.vplayer', '.vqf', '.w64', '.wav', '.wc3movie', '.webm_dash_manifest', '.webp_pipe', '.webvtt', '.wsaud', '.wsd', '.wsvqa', '.wtv', '.wv', '.wve', '.xa', '.xbin', '.xmv', '.xpm_pipe', '.xvag', '.xwd_pipe', '.xwma', '.yop', '.yuv4mpegpipe']
@@ -40,17 +46,38 @@ def check_num_speakers(num_speakers):
 
 def handle_file(file, timestamp, model, device):
     os.makedirs(TRANSCRIPT_DIR, exist_ok=True)
-    filename = file.filename
+    
+    # Extract filename from file_path
+    filename = os.path.basename(file)
+    
+    # Generate file_id and create file directory
     file_id = create_file_id(filename, timestamp)
-    file_directory = os.path.join(TRANSCRIPT_DIR,file_id)
-    os.makedirs(file_directory)
-    file_path = os.path.join(file_directory, filename)
-    file.save(file_path)
-    processed_file = prepare_audio(file_id, file_path, file_directory)
+    file_directory = os.path.join(TRANSCRIPT_DIR, file_id)
+    os.makedirs(file_directory, exist_ok=True)
+    
+    # Destination path for the copied file
+    transcript_file_path = os.path.join(file_directory, filename)
+    
+    # Copy file to transcript directory
+    shutil.copyfile(file, transcript_file_path)
+    
+    # Process audio file
+    processed_file = prepare_audio(file_id, transcript_file_path, file_directory)
+    
+    # Get audio duration
     audio_duration = get_audio_duration(processed_file)
-    estimated_process_time = estimate_processing_time(audio_duration,model, device)
-    os.remove(file_path)
+    
+    # Estimate processing time
+    estimated_process_time = estimate_processing_time(audio_duration, model, device)
+    
+    # Remove temporary file
+    os.remove(transcript_file_path)
+    
     return filename, file_id, estimated_process_time, audio_duration
+
+
+
+
 
 def create_file_id(filename, timestamp):
     file_base_name = os.path.normpath(filename)

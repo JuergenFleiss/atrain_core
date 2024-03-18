@@ -1,5 +1,5 @@
-from .load_resources import get_ffmpeg
-from .custom_ffmpeg import custom_ffmpeg_run
+from load_resources import get_ffmpeg
+from custom_ffmpeg import custom_ffmpeg_run
 import os
 import ffmpeg
 from scipy.io import wavfile
