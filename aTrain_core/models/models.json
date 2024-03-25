@@ -26,5 +26,9 @@
 "diarize" : {
     "repo_id" : "arminhaberl/diarize",
     "revision" : "70180675a7e49a2d26bd3eaff33b969250cad8dc"
+},
+"distilled_en" : {
+    "repo_id" : "distil-whisper/distil-large-v3",
+    "revision" : "123"
 }
 }

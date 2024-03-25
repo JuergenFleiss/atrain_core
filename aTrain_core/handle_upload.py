@@ -33,7 +33,7 @@ def check_file(file):
     return file_extension_lower in correct_file_formats
 
 def check_model(model):
-    correct_models = ["tiny", "base", "small", "medium" , "large-v1" , "large-v2"]
+    correct_models = ["tiny", "base", "small", "medium" , "large-v1" , "large-v2", "distilled_en"]
     return model in correct_models
 
 def check_language(language):
