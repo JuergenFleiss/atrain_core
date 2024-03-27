@@ -27,10 +27,9 @@
     "repo_id" : "arminhaberl/diarize",
     "revision" : "70180675a7e49a2d26bd3eaff33b969250cad8dc"
 },
-"distilled_en" : {
-    "repo_id" : "distil-whisper/distil-large-v3",
-    "revision" : "bcd0b191c659442f5c91ca27fb1e1f0ea7a06cfa",
-    "languages": ["en"]
+"distilled-large-v2" : {
+    "repo_id" : "Systran/faster-distil-whisper-large-v2",
+    "revision" : "fbac75ff0e24f79469c38f9c52517ae4c2b89198"
 }
 }
 

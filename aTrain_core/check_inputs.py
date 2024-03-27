@@ -23,7 +23,7 @@ def check_file(file):
 
 def check_model(model):
     # better to look into models.json and check if available
-    correct_models = ["tiny", "base", "small", "medium" , "large-v1" , "large-v2", "distilled_en"]
+    correct_models = ["tiny", "base", "small", "medium" , "large-v1" , "large-v2", "distilled-large-v2"]
     return model in correct_models
 
 def check_language(language):
