@@ -31,7 +31,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     entry_points={
-        'console_scripts': ['aTrain_core = aTrain_core:cli',]
+        'console_scripts': ['aTrain_core = aTrain_core.cli:cli',]
     }
 )
 

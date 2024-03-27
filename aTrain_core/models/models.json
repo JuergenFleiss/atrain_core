@@ -29,6 +29,8 @@
 },
 "distilled_en" : {
     "repo_id" : "distil-whisper/distil-large-v3",
-    "revision" : "123"
+    "revision" : "bcd0b191c659442f5c91ca27fb1e1f0ea7a06cfa",
+    "languages": ["en"]
 }
 }
+
