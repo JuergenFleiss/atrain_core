@@ -9,6 +9,7 @@ from pyannote.audio import Pipeline
 from pyannote.core.utils.helper import get_class_by_name
 from importlib.resources import files
 import yaml
+import json
 import os
 
 class CustomPipeline(Pipeline):
@@ -48,11 +49,17 @@ def transcribe (audio_file, file_id, model, language, speaker_detection, num_spe
     transcription_model = WhisperModel(model_path,device,compute_type=compute_type)
     print("Transcribing file with whisper")
 
-    if model == "faster-distil-english":
+    models_config_path = str(files("aTrain_core.models").joinpath("models.json"))
+    f = open(models_config_path, "r")
+    models = json.load(f)
+
+    if models[model]["type"] == "distil":
+        print("Transcribing with distil model")
         transcription_segments, _ = transcription_model.transcribe(audio=audio_array,vad_filter=True, beam_size=5, word_timestamps=True,language="en",max_new_tokens=128, no_speech_threshold=0.6, condition_on_previous_text=False)
         transcript = {"segments":[named_tuple_to_dict(segment) for segment in transcription_segments]}
 
     else:
+        print("Transcribing with regular multilingual model")
         transcription_segments, _ = transcription_model.transcribe(audio=audio_array,vad_filter=True, beam_size=5, word_timestamps=True,language="en",max_new_tokens=128, no_speech_threshold=0.6, condition_on_previous_text=False)
         transcript = {"segments":[named_tuple_to_dict(segment) for segment in transcription_segments]}
 
