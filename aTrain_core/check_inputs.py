@@ -1,4 +1,6 @@
 import os
+import json
+from importlib.resources import files
 
 
 def check_inputs_transcribe(file, model, language):
@@ -23,8 +25,18 @@ def check_file(file):
 
 def check_model(model):
     # better to look into models.json and check if available
-    correct_models = ["tiny", "base", "small", "medium" , "large-v1" , "large-v2", "distilled-large-v2"]
-    return model in correct_models
+    models_config_path = str(files("aTrain_core.models").joinpath("models.json"))
+    f = open(models_config_path, "r")
+    models = json.load(f)
+    available_models = []
+    for key in models.keys():
+        available_models.append(key)
+    
+    if model not in available_models:
+        raise ValueError(f"Model {model} is not available. These are the available models: {available_models} (Note: model 'diarize' is for speaker detection only)")
+    else:
+        return model in available_models
+    
 
 def check_language(language):
     # based on which model and double-check with models.json and error if wrong language (e.g. distilled english in french)

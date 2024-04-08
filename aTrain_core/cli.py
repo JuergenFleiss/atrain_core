@@ -11,9 +11,6 @@ import argparse
 
 
 
-
-
-
 def cli():
     parser = argparse.ArgumentParser(prog='aTrain_core', description='A CLI tool for audio transcription with Whisper')
     subparsers = parser.add_subparsers(dest='command', help='Command for aTrain_core to perform.')
@@ -26,9 +23,9 @@ def cli():
     # add check for inputs
     parser_transcribe = subparsers.add_parser('transcribe', help='Start transcription process for an audio file')
     parser_transcribe.add_argument('file', help='Path to the audio file')
-    parser_transcribe.add_argument("--model", default="medium", help="Model to use for transcription")
+    parser_transcribe.add_argument("--model", default="distilled-large-v2", help="Model to use for transcription")
     parser_transcribe.add_argument("--language", default="auto-detect", help="Language of the audio")
-    parser_transcribe.add_argument("--speaker_detection", default=False, action="store_true", help="Enable speaker detection")
+    parser_transcribe.add_argument("--speaker_detection", default=True, action="store_true", help="Enable speaker detection")
     parser_transcribe.add_argument("--num_speakers", default="auto-detect", help="Number of speakers")
     parser_transcribe.add_argument("--device", default="CPU", choices=["CPU", "GPU"], help="Device to use (CPU/GPU)")
     parser_transcribe.add_argument("--compute_type", default="int8", choices=["float16", "int8"], help="Compute type (float16/int8)")
