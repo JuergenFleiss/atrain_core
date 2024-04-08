@@ -3,6 +3,7 @@ __pycache__
 dist
 build
 aTrain_core/models/*/
+aTrain_core/models/diarize/
 tailwind*
 node_modules
 package*

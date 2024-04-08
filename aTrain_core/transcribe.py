@@ -46,11 +46,17 @@ def transcribe (audio_file, file_id, model, language, speaker_detection, num_spe
     print("Loading whisper model")
     model_path = get_model(model)
     transcription_model = WhisperModel(model_path,device,compute_type=compute_type)
-
     print("Transcribing file with whisper")
-    transcription_segments, _ = transcription_model.transcribe(audio=audio_array,vad_filter=True, word_timestamps=True,language=language,no_speech_threshold=0.6)
-    transcript = {"segments":[named_tuple_to_dict(segment) for segment in transcription_segments]}
-    
+
+    if model == "distilled-large-v2":
+        transcription_segments, _ = transcription_model.transcribe(audio=audio_array,vad_filter=True, beam_size=5, word_timestamps=True,language="en",max_new_tokens=128, no_speech_threshold=0.6, condition_on_previous_text=False)
+        transcript = {"segments":[named_tuple_to_dict(segment) for segment in transcription_segments]}
+
+    else:
+        transcription_segments, _ = transcription_model.transcribe(audio=audio_array,vad_filter=True, beam_size=5, word_timestamps=True,language="en",max_new_tokens=128, no_speech_threshold=0.6, condition_on_previous_text=False)
+        transcript = {"segments":[named_tuple_to_dict(segment) for segment in transcription_segments]}
+
+
     del transcription_model; gc.collect(); torch.cuda.empty_cache()
     
     if not speaker_detection:
@@ -58,7 +64,6 @@ def transcribe (audio_file, file_id, model, language, speaker_detection, num_spe
         create_output_files(transcript, speaker_detection, file_id)
         add_processing_time_to_metadata(file_id)
 
-    
     if speaker_detection:
         print("Loading speaker detection model")
         model_path = get_model("diarize")
