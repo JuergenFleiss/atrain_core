@@ -17,7 +17,6 @@ def download_all_models():
         get_model(model)
 
 def load_model_config_file():
-
     # only load large v3
     models_config_path = str(files("aTrain_core.models").joinpath("models.json"))
     print(f"load_model_config_file: Model config path: {models_config_path}")
