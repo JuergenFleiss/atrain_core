@@ -48,7 +48,7 @@ def transcribe (audio_file, file_id, model, language, speaker_detection, num_spe
     transcription_model = WhisperModel(model_path,device,compute_type=compute_type)
     print("Transcribing file with whisper")
 
-    if model == "distilled-large-v2":
+    if model == "faster-distil-english":
         transcription_segments, _ = transcription_model.transcribe(audio=audio_array,vad_filter=True, beam_size=5, word_timestamps=True,language="en",max_new_tokens=128, no_speech_threshold=0.6, condition_on_previous_text=False)
         transcript = {"segments":[named_tuple_to_dict(segment) for segment in transcription_segments]}
 

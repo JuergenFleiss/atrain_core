@@ -23,7 +23,7 @@ def cli():
     # add check for inputs
     parser_transcribe = subparsers.add_parser('transcribe', help='Start transcription process for an audio file')
     parser_transcribe.add_argument('file', help='Path to the audio file')
-    parser_transcribe.add_argument("--model", default="distilled-large-v2", help="Model to use for transcription")
+    parser_transcribe.add_argument("--model", default="large-v2", help="Model to use for transcription")
     parser_transcribe.add_argument("--language", default="auto-detect", help="Language of the audio")
     parser_transcribe.add_argument("--speaker_detection", default=True, action="store_true", help="Enable speaker detection")
     parser_transcribe.add_argument("--num_speakers", default="auto-detect", help="Number of speakers")
