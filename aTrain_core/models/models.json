@@ -41,7 +41,7 @@
     "type" : "distil",
     "language" : "en"
 },
-"distil-german" : {
+"faster-distil-german" : {
     "repo_id" : "sanchit-gandhi/distil-whisper-large-v3-de-kd",
     "revision" : "272cbc67330d702500c6f5e0232a38f498e167d1",
     "type" : "distil",

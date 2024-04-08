@@ -5,7 +5,7 @@ import time
 import shutil
 import yaml
 from datetime import datetime
-from .globals import TRANSCRIPT_DIR, METADATA_FILENAME, TIMESTAMP_FORMAT
+from .globals import TRANSCRIPT_DIR, METADATA_FILENAME, TIMESTAMP_FORMAT, LOG_FILENAME
 
 
 
@@ -119,6 +119,12 @@ def create_metadata(file_id, filename, audio_duration, model, language, speaker_
         }
     with open(metadata_file_path,"w", encoding="utf-8") as metadata_file:
         yaml.dump(metadata, metadata_file)
+
+def write_logfile(message, file_id):
+    timestamp = datetime.now().strftime(TIMESTAMP_FORMAT)
+    log_file_path = os.path.join(TRANSCRIPT_DIR,file_id,LOG_FILENAME)
+    with open(log_file_path, "a", encoding="utf-8") as f:
+        f.write(f"[{timestamp}] ------ {message}\n")
 
 
 def add_processing_time_to_metadata(file_id):
