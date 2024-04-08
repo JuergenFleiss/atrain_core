@@ -1,5 +1,13 @@
 <img src="https://github.com/BANDAS-Center/aTrain/blob/main/docs/images/logo.svg" width="300" alt="Logo">
 
+## Rewrite of the codebase!!!
+
+aTrain-core will be the transcription pipeline (currently running in windows and apple, also propably linux..) for the the aTrain GUI as well as aTrain Web (as the server version).
+
+Use/Work on branch core-functionality
+
+Current Usage: aTrain_core transcribe [-h] [--model MODEL] [--language LANGUAGE] [--speaker_detection] [--num_speakers NUM_SPEAKERS] [--device {CPU,GPU}] [--compute_type {float16,int8}] file
+
 ## Accessible Transcription of Interviews
 aTrain is a tool for automatically transcribing speech recordings utilizing state-of-the-art machine learning models without uploading any data. It was developed by researchers at the Business Analytics and Data Science-Center at the University of Graz and tested by researchers from the Know-Center Graz. 
 
