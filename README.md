@@ -19,8 +19,9 @@ python -m venv venv
 ```
 
 ```
-pip install aTrain_core@git+https://github.com/JuergenFleiss/aTrain-core.git --extra-index-url https://download.pytorch.org/whl/cu118
+pip install aTrain_core@git+https://github.com/JuergenFleiss/aTrain-core.git@core-functionality --extra-index-url https://download.pytorch.org/whl/cu118
 ```
+
 Current Usage: aTrain_core transcribe [-h] [--model MODEL] [--language LANGUAGE] [--speaker_detection] [--num_speakers NUM_SPEAKERS] [--device {CPU,GPU}] [--compute_type {float16,int8}] file
 
 
