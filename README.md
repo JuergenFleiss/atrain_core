@@ -6,7 +6,25 @@ aTrain-core will be the transcription pipeline (currently running in windows and
 
 Use/Work on branch core-functionality
 
+## CLI Installation⚙️
+
+**You need to have python >=3.10**  
+
+```
+python -m venv venv
+```
+
+```
+.\venv\Scripts\activate
+```
+
+```
+pip install aTrain_core@git+https://github.com/JuergenFleiss/aTrain-core.git --extra-index-url https://download.pytorch.org/whl/cu118
+```
 Current Usage: aTrain_core transcribe [-h] [--model MODEL] [--language LANGUAGE] [--speaker_detection] [--num_speakers NUM_SPEAKERS] [--device {CPU,GPU}] [--compute_type {float16,int8}] file
+
+
+
 
 ## Accessible Transcription of Interviews
 aTrain is a tool for automatically transcribing speech recordings utilizing state-of-the-art machine learning models without uploading any data. It was developed by researchers at the Business Analytics and Data Science-Center at the University of Graz and tested by researchers from the Know-Center Graz. 
