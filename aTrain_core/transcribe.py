@@ -1,65 +1,115 @@
-from .output_files import create_output_files, named_tuple_to_dict, transform_speakers_results
-from .archive import read_metadata, delete_transcription, add_processing_time_to_metadata, TRANSCRIPT_DIR
+from .outputs import create_output_files, named_tuple_to_dict, transform_speakers_results, create_directory, add_processing_time_to_metadata, create_metadata, write_logfile
+from .globals import SAMPLING_RATE
 from .load_resources import get_model
+from faster_whisper.audio import decode_audio
 import numpy as np
+import gc, torch #Import inside the function to speed up the startup time of the destkop app.
+from faster_whisper import WhisperModel
+from pyannote.audio import Pipeline
+from pyannote.core.utils.helper import get_class_by_name
+from importlib.resources import files
+import yaml
+import json
 import os
-import traceback
-from flask import render_template
+from tqdm import tqdm
+from pyannote.audio.pipelines.utils.hook import ProgressHook
 
-def handle_transcription(file_id):
-    try:
-        filename, model, language, speaker_detection, num_speakers, device, compute_type = read_metadata(file_id)
-        file_directory = os.path.join(TRANSCRIPT_DIR,file_id)
-        prepared_file = os.path.join(file_directory, file_id + ".wav")
-        for step in transcribe(prepared_file, model, language, speaker_detection, num_speakers, device, compute_type):
-            response = f"data: {step['task']}\n\n"
-            yield response
-        create_output_files(step["result"], speaker_detection, file_directory, filename)
-        add_processing_time_to_metadata(file_id)
-        os.remove(prepared_file)
-        html = render_template("modals/modal_download.html", file_id=file_id).replace('\n', '')
-        response = f"event: stopstream\ndata: {html}\n\n"
-        yield response
-    except Exception as e:
-        delete_transcription(file_id)
-        traceback_str = traceback.format_exc()
-        error = str(e)
-        html = render_template("modals/modal_error.html", error=error, traceback=traceback_str).replace('\n', '')
-        response = f"event: stopstream\ndata: {html}\n\n"
-        yield response
+class CustomPipeline(Pipeline):
+    @classmethod
+    def from_pretrained(cls,model_path) -> "Pipeline":
+        config_yml = str(files("aTrain_core.models").joinpath("config.yaml"))
+        with open(config_yml, "r") as config_file:
+            config = yaml.load(config_file, Loader=yaml.SafeLoader)
+        pipeline_name = config["pipeline"]["name"]
+        Klass = get_class_by_name(pipeline_name, default_module_name="pyannote.pipeline.blocks")
+        params = config["pipeline"].get("params", {})
+        path_segmentation_model = os.path.join(model_path,"segmentation_pyannote.bin")
+        path_embedding_model = os.path.join(model_path,"embedding_pyannote.bin")
+        params["segmentation"] = path_segmentation_model.replace('\\', '/')
+        params["embedding"] = path_embedding_model.replace('\\', '/')
+        pipeline = Klass(**params)
+        pipeline.instantiate(config["params"])
+        return pipeline
 
-def transcribe (audio_file, model, language, speaker_detection, num_speakers, device, compute_type):   
-    import gc, torch #Import inside the function to speed up the startup time of the destkop app.
-    from faster_whisper import WhisperModel
-    from .pipeline import CustomPipeline
+def transcription_with_progress_bar(transcription_segments, info):
+    total_duration = round(info.duration, 2)  
+    timestamps = 0.0  # to get the current segments
+    with tqdm(total=total_duration, unit=" audio seconds", desc="Transcribing file with whisper") as pbar:
+        for segment in transcription_segments:
+            pbar.update(segment.end - timestamps)
+            timestamps = segment.end
+        if timestamps < info.duration: # silence at the end of the audio
+            pbar.update(info.duration - timestamps)
     
+    return transcription_segments
+
+
+def transcribe (audio_file, file_id, model, language, speaker_detection, num_speakers, device, compute_type, timestamp):   
+    create_directory(file_id)
+    write_logfile("Directory created", file_id)
     language = None if language == "auto-detect" else language
     min_speakers = max_speakers = None if num_speakers == "auto-detect" else int(num_speakers)
     device = "cuda" if device=="GPU" else "cpu"
 
-    yield {"task":"Loading whisper model"}
+    audio_array = decode_audio(audio_file, sampling_rate=SAMPLING_RATE)
+    write_logfile("Audio file loaded and decoded", file_id)
+    audio_duration = int(len(audio_array)/SAMPLING_RATE)
+    write_logfile("Audio duration calculated", file_id)
+    create_metadata(file_id, file_id, audio_duration, model, language, speaker_detection, num_speakers, device, compute_type, timestamp)
+    write_logfile("Metadata created", file_id)
+
     model_path = get_model(model)
+    write_logfile("Model loaded", file_id)
     transcription_model = WhisperModel(model_path,device,compute_type=compute_type)
 
-    yield {"task":"Transcribing file with whisper"}
-    transcription_segments, _ = transcription_model.transcribe(audio=audio_file,vad_filter=True, word_timestamps=True,language=language,no_speech_threshold=0.6)
-    transcript = {"segments":[named_tuple_to_dict(segment) for segment in transcription_segments]}
-    
+    models_config_path = str(files("aTrain_core.models").joinpath("models.json"))
+    f = open(models_config_path, "r")
+    models = json.load(f)
+
+    if models[model]["type"] == "distil":
+        write_logfile("Transcribing with distil model", file_id)
+        transcription_segments, info = transcription_model.transcribe(audio=audio_array,vad_filter=True, beam_size=5, word_timestamps=True,language=language, no_speech_threshold=0.6, condition_on_previous_text=False)
+        transcript = {"segments":[named_tuple_to_dict(segment) for segment in transcription_segments]} # wenn man die beiden umdreht also progress bar zuerst damit er schön läuft, dann ist das segments dict leer, sprich es gibt keine transkription
+        transcription_segments = transcription_with_progress_bar(transcription_segments, info)
+        write_logfile("Transcription successful", file_id)
+
+    else:
+        write_logfile("Transcribing with regular multilingual model", file_id)
+        transcription_segments, info = transcription_model.transcribe(audio=audio_array,vad_filter=True, beam_size=5, word_timestamps=True,language=language,max_new_tokens=128, no_speech_threshold=0.6, condition_on_previous_text=False)
+        
+        transcript = {"segments":[named_tuple_to_dict(segment) for segment in transcription_segments]} # wenn man die beiden umdreht also progress bar zuerst damit er schön läuft, dann ist das segments dict leer, sprich es gibt keine transkription
+        transcription_segments = transcription_with_progress_bar(transcription_segments, info)
+        write_logfile("Transcription successful", file_id)
+
+
     del transcription_model; gc.collect(); torch.cuda.empty_cache()
     
     if not speaker_detection:
-        yield {"task":"Finishing up", "result" : transcript}
-    
+        print(f"Finishing up")
+        create_output_files(transcript, speaker_detection, file_id)
+        write_logfile("No speaker detection. Created output files", file_id)
+        add_processing_time_to_metadata(file_id)
+        write_logfile("Processing time added to metadata", file_id)
+
     if speaker_detection:
-        yield {"task":"Loading speaker detection model"}
+        print("Loading speaker detection model")
         model_path = get_model("diarize")
+        write_logfile("Speaker detection model loaded", file_id)
         diarize_model = CustomPipeline.from_pretrained(model_path).to(torch.device(device))
-        yield {"task":"Detecting speakers"}
-        diarization_segments = diarize_model(audio_file,min_speakers=min_speakers, max_speakers=max_speakers)
+        write_logfile("Detecting speakers", file_id)
+        audio_array = { "waveform": torch.from_numpy(audio_array[None, :]), "sample_rate": SAMPLING_RATE}
+        with ProgressHook() as hook:
+            diarization_segments = diarize_model(audio_array,min_speakers=min_speakers, max_speakers=max_speakers, hook=hook)
         speaker_results = transform_speakers_results(diarization_segments)
+        write_logfile("Transformed diarization segments to speaker results", file_id)
         del diarize_model; gc.collect(); torch.cuda.empty_cache()
         transcript_with_speaker = assign_word_speakers(speaker_results,transcript)
-        yield {"task":"Finishing up", "result":transcript_with_speaker}
+        write_logfile("Assigned speakers to words", file_id)
+        print("Finishing up")
+        create_output_files(transcript_with_speaker, speaker_detection, file_id)
+        write_logfile("Created output files", file_id)
+        add_processing_time_to_metadata(file_id)
+        write_logfile("Processing time added to metadata", file_id)
 
 def assign_word_speakers(diarize_df, transcript_result, fill_nearest=False):
     #Function from whisperx -> see https://github.com/m-bain/whisperX.git

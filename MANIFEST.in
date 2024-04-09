@@ -1,5 +1,2 @@
-recursive-include aTrain_core/faq *
 recursive-include aTrain_core/models *
-recursive-include aTrain_core/static *
-recursive-include aTrain_core/templates *
 include aTrain_core/ffmpeg*
