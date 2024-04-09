@@ -26,7 +26,6 @@ Current Usage: aTrain_core transcribe [-h] [--model MODEL] [--language LANGUAGE]
 
 
 
-
 ## Accessible Transcription of Interviews
 aTrain is a tool for automatically transcribing speech recordings utilizing state-of-the-art machine learning models without uploading any data. It was developed by researchers at the Business Analytics and Data Science-Center at the University of Graz and tested by researchers from the Know-Center Graz. 
 
