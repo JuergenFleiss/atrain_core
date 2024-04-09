@@ -4,8 +4,6 @@
 
 aTrain-core will be the transcription pipeline (currently running in windows and apple, also propably linux..) for the the aTrain GUI as well as aTrain Web (as the server version).
 
-Use/Work on branch core-functionality
-
 ## CLI Installation⚙️
 
 **You need to have python >=3.10**  
@@ -19,7 +17,7 @@ python -m venv venv
 ```
 
 ```
-pip install aTrain_core@git+https://github.com/JuergenFleiss/aTrain-core.git@core-functionality --extra-index-url https://download.pytorch.org/whl/cu118
+pip install aTrain_core@git+https://github.com/JuergenFleiss/aTrain-core.git --extra-index-url https://download.pytorch.org/whl/cu118
 ```
 
 Current Usage: 
