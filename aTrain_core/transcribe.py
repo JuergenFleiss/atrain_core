@@ -16,7 +16,7 @@ from pyannote.audio.pipelines.utils.hook import ProgressHook
 
 class CustomPipeline(Pipeline):
     @classmethod
-    def from_pretrained(cls,model_path) -> "Pipeline":
+    def from_pretained(cls,model_path) -> "Pipeline":
         config_yml = str(files("aTrain_core.models").joinpath("config.yaml"))
         with open(config_yml, "r") as config_file:
             config = yaml.load(config_file, Loader=yaml.SafeLoader)
@@ -34,15 +34,20 @@ class CustomPipeline(Pipeline):
 def transcription_with_progress_bar(transcription_segments, info):
     total_duration = round(info.duration, 2)  
     timestamps = 0.0  # to get the current segments
-    with tqdm(total=total_duration, unit=" audio seconds", desc="Transcribing file with whisper") as pbar:
+    transcription_segments_new = []
+
+    with tqdm(total=total_duration, unit=" audio seconds") as pbar:
         for segment in transcription_segments:
+            transcription_segments_new.append(segment)
             pbar.update(segment.end - timestamps)
             timestamps = segment.end
         if timestamps < info.duration: # silence at the end of the audio
             pbar.update(info.duration - timestamps)
-    
-    return transcription_segments
+        
+    return transcription_segments_new
+            
 
+    
 
 def transcribe (audio_file, file_id, model, language, speaker_detection, num_speakers, device, compute_type, timestamp):   
     create_directory(file_id)
@@ -69,16 +74,15 @@ def transcribe (audio_file, file_id, model, language, speaker_detection, num_spe
     if models[model]["type"] == "distil":
         write_logfile("Transcribing with distil model", file_id)
         transcription_segments, info = transcription_model.transcribe(audio=audio_array,vad_filter=True, beam_size=5, word_timestamps=True,language=language, no_speech_threshold=0.6, condition_on_previous_text=False)
-        transcript = {"segments":[named_tuple_to_dict(segment) for segment in transcription_segments]} # wenn man die beiden umdreht also progress bar zuerst damit er schön läuft, dann ist das segments dict leer, sprich es gibt keine transkription
         transcription_segments = transcription_with_progress_bar(transcription_segments, info)
+        transcript = {"segments":[named_tuple_to_dict(segment) for segment in transcription_segments]} # wenn man die beiden umdreht also progress bar zuerst damit er schön läuft, dann ist das segments dict leer, sprich es gibt keine transkription
         write_logfile("Transcription successful", file_id)
 
     else:
         write_logfile("Transcribing with regular multilingual model", file_id)
         transcription_segments, info = transcription_model.transcribe(audio=audio_array,vad_filter=True, beam_size=5, word_timestamps=True,language=language,max_new_tokens=128, no_speech_threshold=0.6, condition_on_previous_text=False)
-        
-        transcript = {"segments":[named_tuple_to_dict(segment) for segment in transcription_segments]} # wenn man die beiden umdreht also progress bar zuerst damit er schön läuft, dann ist das segments dict leer, sprich es gibt keine transkription
         transcription_segments = transcription_with_progress_bar(transcription_segments, info)
+        transcript = {"segments":[named_tuple_to_dict(segment) for segment in transcription_segments]} # wenn man die beiden umdreht also progress bar zuerst damit er schön läuft, dann ist das segments dict leer, sprich es gibt keine transkription
         write_logfile("Transcription successful", file_id)
 
 
