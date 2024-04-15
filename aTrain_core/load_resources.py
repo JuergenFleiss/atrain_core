@@ -6,6 +6,7 @@ import json
 import os
 from tqdm import tqdm
 import platform
+from .globals import ATRAIN_DIR
 
 def download_all_resources():
     """Downloads all resources including models."""
@@ -42,7 +43,7 @@ def get_model(model):
     
     models_config = load_model_config_file()
     model_info = models_config[model]
-    model_path = str(files("aTrain_core.models").joinpath(model))
+    model_path = os.path.join(ATRAIN_DIR, "models", model)
     if not os.path.exists(model_path):
         snapshot_download(repo_id=model_info["repo_id"], revision=model_info["revision"], local_dir=model_path, local_dir_use_symlinks=False)
         print(f"Model downloaded to {model_path}")

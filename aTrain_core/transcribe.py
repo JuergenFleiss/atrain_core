@@ -1,5 +1,5 @@
 from .outputs import create_output_files, named_tuple_to_dict, transform_speakers_results, create_directory, add_processing_time_to_metadata, create_metadata, write_logfile
-from .globals import SAMPLING_RATE
+from .globals import SAMPLING_RATE, ATRAIN_DIR
 from .load_resources import get_model
 from faster_whisper.audio import decode_audio
 import numpy as np
@@ -25,7 +25,7 @@ class CustomPipeline(Pipeline):
         Returns:
             Pipeline: An instance of the custom pipeline configured with the pre-trained models.
         """
-        config_yml = str(files("aTrain_core.models.diarize").joinpath("config.yaml"))
+        config_yml = os.path.join(ATRAIN_DIR, "models", "diarize", "config.yaml")
         with open(config_yml, "r") as config_file: 
             config = yaml.load(config_file, Loader=yaml.SafeLoader)
         pipeline_name = config["pipeline"]["name"]
