@@ -36,7 +36,7 @@ def transcription_with_progress_bar(transcription_segments, info):
     timestamps = 0.0  # to get the current segments
     transcription_segments_new = []
 
-    with tqdm(total=total_duration, unit=" audio seconds") as pbar:
+    with tqdm(total=total_duration, unit=" audio seconds", desc="Transcribing with Whisper") as pbar:
         for segment in transcription_segments:
             transcription_segments_new.append(segment)
             pbar.update(segment.end - timestamps)
