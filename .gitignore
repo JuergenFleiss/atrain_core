@@ -3,7 +3,6 @@ __pycache__
 dist
 build
 aTrain_core/models/*/
-aTrain_core/models/diarize/
 tailwind*
 node_modules
 package*
@@ -11,3 +10,4 @@ ffmpeg*
 aTrain_core.egg-info
 installer.iss
 prepare_msix.py
+.DS_Store

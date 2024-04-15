@@ -36,9 +36,8 @@
     "type" : "regular"
 },
 "diarize" : {
-    "repo_id" : "aTrain-core/diarize",
-    "revision" : "21e9e2d3484d3874bf9a4831585efd5bc60d84d0",
-    "type" : "regular"
+    "repo_id" : "aTrain-core/diarize-3.1",
+    "revision" : "bf4c199cbf9b22ce90a6133e5046cc922e0136c6"
 },
 "faster-distil-english" : {
     "repo_id" : "aTrain-core/faster-distil-whisper-large-v2",

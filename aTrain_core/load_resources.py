@@ -45,6 +45,7 @@ def get_model(model):
     model_path = str(files("aTrain_core.models").joinpath(model))
     if not os.path.exists(model_path):
         snapshot_download(repo_id=model_info["repo_id"], revision=model_info["revision"], local_dir=model_path, local_dir_use_symlinks=False)
+        print(f"Model downloaded to {model_path}")
     return model_path
 
 

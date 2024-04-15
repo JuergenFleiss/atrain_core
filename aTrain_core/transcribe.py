@@ -16,7 +16,7 @@ from pyannote.audio.pipelines.utils.hook import ProgressHook
 
 class CustomPipeline(Pipeline):
     @classmethod
-    def from_pretained(cls,model_path) -> "Pipeline":
+    def from_pretrained(cls,model_path) -> "Pipeline":
         """Constructs a custom pipeline from pre-trained models.
 
         Args:
@@ -25,16 +25,18 @@ class CustomPipeline(Pipeline):
         Returns:
             Pipeline: An instance of the custom pipeline configured with the pre-trained models.
         """
-        config_yml = str(files("aTrain_core.models").joinpath("config.yaml"))
-        with open(config_yml, "r") as config_file:
+        config_yml = str(files("aTrain_core.models.diarize").joinpath("config.yaml"))
+        with open(config_yml, "r") as config_file: 
             config = yaml.load(config_file, Loader=yaml.SafeLoader)
         pipeline_name = config["pipeline"]["name"]
         Klass = get_class_by_name(pipeline_name, default_module_name="pyannote.pipeline.blocks")
         params = config["pipeline"].get("params", {})
-        path_segmentation_model = os.path.join(model_path,"segmentation_pyannote.bin")
-        path_embedding_model = os.path.join(model_path,"embedding_pyannote.bin")
+        path_segmentation_model = os.path.join(model_path,"diarize_segmentation.bin")
+        path_embedding_model = os.path.join(model_path,"diarize_embedding.bin")
         params["segmentation"] = path_segmentation_model.replace('\\', '/')
+        print(params["segmentation"])
         params["embedding"] = path_embedding_model.replace('\\', '/')
+        print(params["embedding"])
         pipeline = Klass(**params)
         pipeline.instantiate(config["params"])
         return pipeline
