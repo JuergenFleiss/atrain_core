@@ -8,21 +8,38 @@ from tqdm import tqdm
 import platform
 
 def download_all_resources():
+    """Downloads all resources including models."""
     download_all_models()
 
 def download_all_models():
+    """Downloads all models defined in the model configuration file."""
     models_config = load_model_config_file()
     for model in models_config:
         get_model(model)
 
 def load_model_config_file():
+    """Loads the model configuration file.
+
+    Returns:
+        dict: Dictionary containing model configurations.
+    """
+
     # only load large v3
     models_config_path = str(files("aTrain_core.models").joinpath("models.json"))
     with open(models_config_path, "r") as models_config_file:
         models_config = json.load(models_config_file)
     return models_config
 
-def get_model(model): # loads only one model
+def get_model(model):
+    """Loads a specific model.
+
+    Args:
+        model (str): Name of the model to load.
+
+    Returns:
+        str: Path to the downloaded model.
+    """
+    
     models_config = load_model_config_file()
     model_info = models_config[model]
     model_path = str(files("aTrain_core.models").joinpath(model))

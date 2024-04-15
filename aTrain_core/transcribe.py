@@ -17,6 +17,14 @@ from pyannote.audio.pipelines.utils.hook import ProgressHook
 class CustomPipeline(Pipeline):
     @classmethod
     def from_pretained(cls,model_path) -> "Pipeline":
+        """Constructs a custom pipeline from pre-trained models.
+
+        Args:
+            model_path (str): Path to the directory containing pre-trained models.
+
+        Returns:
+            Pipeline: An instance of the custom pipeline configured with the pre-trained models.
+        """
         config_yml = str(files("aTrain_core.models").joinpath("config.yaml"))
         with open(config_yml, "r") as config_file:
             config = yaml.load(config_file, Loader=yaml.SafeLoader)
@@ -32,6 +40,15 @@ class CustomPipeline(Pipeline):
         return pipeline
 
 def transcription_with_progress_bar(transcription_segments, info):
+    """Transcribes audio segments with progress bar.
+
+    Args:
+        transcription_segments (list): List of audio segments to transcribe.
+        info (object): Information about the audio.
+
+    Returns:
+        list: Transcribed audio segments with progress bar.
+    """
     total_duration = round(info.duration, 2)  
     timestamps = 0.0  # to get the current segments
     transcription_segments_new = []
@@ -49,7 +66,23 @@ def transcription_with_progress_bar(transcription_segments, info):
 
     
 
-def transcribe (audio_file, file_id, model, language, speaker_detection, num_speakers, device, compute_type, timestamp):   
+def transcribe (audio_file, file_id, model, language, speaker_detection, num_speakers, device, compute_type, timestamp):
+    """Transcribes audio file with specified parameters.
+
+    Args:
+        audio_file (str): Path to the audio file.
+        file_id (str): Identifier for the file.
+        model (str): Name of the transcription model.
+        language (str): Language for transcription.
+        speaker_detection (bool): Whether to perform speaker detection.
+        num_speakers (str): Number of speakers for speaker detection.
+        device (str): Device to use for transcription.
+        compute_type (str): Type of compute to use.
+        timestamp (str): Timestamp for the transcription.
+
+    Returns:
+        None
+    """ 
     create_directory(file_id)
     write_logfile("Directory created", file_id)
     language = None if language == "auto-detect" else language
@@ -116,6 +149,16 @@ def transcribe (audio_file, file_id, model, language, speaker_detection, num_spe
         write_logfile("Processing time added to metadata", file_id)
 
 def assign_word_speakers(diarize_df, transcript_result, fill_nearest=False):
+    """Assigns speakers to transcribed words.
+
+    Args:
+        diarize_df (DataFrame): Dataframe containing speaker information.
+        transcript_result (dict): Transcription result.
+        fill_nearest (bool, optional): Whether to fill nearest speakers. Defaults to False.
+
+    Returns:
+        dict: Transcription result with assigned speakers.
+    """
     #Function from whisperx -> see https://github.com/m-bain/whisperX.git
     transcript_segments = transcript_result["segments"]
     for seg in transcript_segments:
