@@ -3,7 +3,7 @@
 ## Tl;dr
 aTrain-core is a command line interface for a transcription pipeline for the transcription of most audio and video formats in various output formats. It is tested to run on Windows, MacOS (both Intel and Apple Silicon) and Debian-based Linux distributions. 
 
-It uses [faster-whisper](https://github.com/SYSTRAN/faster-whisper) for transcription and [pyannote-audio](https://github.com/pyannote/pyannote-audio) for speaker diarization.
+It uses [faster-whisper](https://github.com/SYSTRAN/faster-whisper) for transcription and [pyannote-audio](https://github.com/pyannote/pyannote-audio) for speaker diarization. Supports Whisper V3 large. Supports distilled large v3 model for English, bringing you real time transcription on CPU.
 
 
 ## Installation ⚙️
