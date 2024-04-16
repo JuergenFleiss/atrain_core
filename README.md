@@ -1,10 +1,12 @@
 <img src="https://github.com/BANDAS-Center/aTrain/blob/main/docs/images/logo.svg" width="300" alt="Logo">
 
-## Rewrite of the codebase!!!
+## Tl;dr
+aTrain-core is a command line interface for a transcription pipeline for the transcription of most audio and video formats in various output formats. It is tested to run on Windows, MacOS (both Intel and Apple Silicon) and Debian-based Linux distributions. 
 
-aTrain-core will be the transcription pipeline (currently running in windows and apple, also propably linux..) for the the aTrain GUI as well as aTrain Web (as the server version).
+It uses [faster-whisper](https://github.com/SYSTRAN/faster-whisper) for transcription and [pyannote-audio](https://github.com/pyannote/pyannote-audio) for speaker diarization.
 
-## CLI Installation⚙️
+
+## Installation ⚙️
 
 **You need to have python >=3.10**  
 
@@ -19,6 +21,7 @@ python -m venv venv
 ```
 pip install aTrain_core@git+https://github.com/JuergenFleiss/aTrain-core.git --extra-index-url https://download.pytorch.org/whl/cu118
 ```
+You may need to add 
 
 Current Usage: 
 ```
