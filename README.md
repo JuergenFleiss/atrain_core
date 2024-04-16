@@ -10,20 +10,25 @@ It uses [faster-whisper](https://github.com/SYSTRAN/faster-whisper) for transcri
 
 **You need to have python >=3.10**  
 
+For Windows
 ```
 python -m venv venv
-```
-
-```
 .\venv\Scripts\activate
 ```
 
+For Debian
+```
+python3 -m venv venv
+source venv/bin/activate
+```
+
+Windows, Debian and MacOS
 ```
 pip install aTrain_core@git+https://github.com/JuergenFleiss/aTrain-core.git --extra-index-url https://download.pytorch.org/whl/cu118
 ```
-You may need to add 
+Linux keeps killing collection of torch? Try adding the flag--no-cache-dir
 
-Current Usage: 
+Usage: 
 ```
 aTrain_core transcribe [-h] [--model MODEL] [--language LANGUAGE] [--speaker_detection] [--num_speakers NUM_SPEAKERS] [--device {CPU,GPU}] [--compute_type {float16,int8}] file
 ```
