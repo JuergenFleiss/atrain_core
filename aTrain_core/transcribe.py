@@ -134,7 +134,7 @@ def transcribe (audio_file, file_id, model, language, speaker_detection, num_spe
         print("Loading speaker detection model")
         model_path = get_model("diarize")
         write_logfile("Speaker detection model loaded", file_id)
-        diarize_model = CustomPipeline.from_pretrained(model_path).to(torch.device(device))
+        diarize_model = CustomPipeline.from_pretrained(model_path).to(torch.device("cpu"))
         write_logfile("Detecting speakers", file_id)
         audio_array = { "waveform": torch.from_numpy(audio_array[None, :]), "sample_rate": SAMPLING_RATE}
         with ProgressHook() as hook:
