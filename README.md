@@ -16,7 +16,7 @@ python -m venv venv
 .\venv\Scripts\activate
 ```
 
-For Debian
+For Debian und MacOS
 ```
 python3 -m venv venv
 source venv/bin/activate
