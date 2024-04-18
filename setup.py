@@ -4,7 +4,7 @@ import platform
 
 system = platform.system()
 if system in ["Windows","Linux"]:
-    torch = "torch==2.2.1+cu118"
+    torch = "torch==2.0.0+cu118"
 if system == "Darwin":
     torch = "torch==2.0.0"
 
