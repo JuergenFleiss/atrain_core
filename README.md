@@ -1,11 +1,11 @@
 <img src="https://github.com/BANDAS-Center/aTrain/blob/main/docs/images/logo.svg" width="300" alt="Logo">
 
 ## Tl;dr
-aTrain-core is a command line interface for a transcription pipeline for the transcription of most audio and video formats in various output formats. It is tested to run on Windows, MacOS (both Intel and Apple Silicon) and Debian-based Linux distributions. 
+aTrain-core: command line interface for the transcription ([faster-whisper](https://github.com/SYSTRAN/faster-whisper)) of audio and video files, including speaker diarization ([pyannote-audio](https://github.com/pyannote/pyannote-audio)). It runs on Windows, MacOS and Debian-based Linux distributions. 
 
-It uses [faster-whisper](https://github.com/SYSTRAN/faster-whisper) for transcription and [pyannote-audio](https://github.com/pyannote/pyannote-audio) for speaker diarization. Supports Whisper V3 large. Supports distilled large v3 model for English, bringing you real time transcription on CPU.
+Supports all the newest models, including Whisper large V3 and distilled large v3 model (English, real time transcription on CPU).
 
-If you use aTrain for a publication, cite [Haberl, Fleiß, Kowald & Thalmann 2024](https://www.sciencedirect.com/science/article/pii/S2214635024000066?via%3Dihub) as per our [license](https://github.com/JuergenFleiss/atrain_core?tab=License-1-ov-file). 
+If you use aTrain for a publication, please cite [Haberl, Fleiß, Kowald & Thalmann 2024](https://www.sciencedirect.com/science/article/pii/S2214635024000066?via%3Dihub) as per our [license](https://github.com/JuergenFleiss/atrain_core?tab=License-1-ov-file). 
 
 ## Installation ⚙️
 
