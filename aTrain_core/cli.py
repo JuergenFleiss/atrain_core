@@ -85,7 +85,7 @@ def cli():
         try:
             check_inputs_transcribe(file, model, language)
             transcribe(file, file_id, model, language, speaker_detection, num_speakers, device, compute_type, timestamp)
-            print(f"Thank you for using aTrain \nIf you use aTrain in a scientific publication, please consider citing our paper:\n'Take the aTrain. Introducing an interface for the Accessible Transcription of Interviews'\navailable under: {link('https://www.sciencedirect.com/science/article/pii/S2214635024000066')}")
+            print(f"Thank you for using aTrain \nIf you use aTrain in a scientific publication, please cite our paper:\n'Take the aTrain. Introducing an interface for the Accessible Transcription of Interviews'\navailable under: {link('https://www.sciencedirect.com/science/article/pii/S2214635024000066')}")
         except Exception as error:
             delete_transcription(file_id)
             traceback_str = traceback.format_exc()
