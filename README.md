@@ -115,80 +115,13 @@ aTrain can either run on the CPU or an NVIDIA GPU (CUDA toolkit installation req
 | ![Screenshot1](docs/images/screenshot_1.webp) | ![Screenshot2](docs/images/screenshot_2.webp) |
 
 ## Benchmarks
-For testing the processing time of aTrain we transcribed an audiobook ("[The Snow Queen](https://ia802608.us.archive.org/33/items/andersens_fairytales_librivox/fairytales_06_andersen.mp3)" from Hans Christian Andersen with a duration of 1 hour, 13 minutes, and 38 seconds) with three different computers (see table 1). The figure below shows the processing time of each transcription relative to the length of the speech recording. In this relative processing time (RPT), a transcription is considered ’real time’ when the recording length and the processing time are equal. Subsequently, faster transcriptions lead to an RPT below 1 and slower transcriptions to an RPT time above 1.
+For testing the processing time of aTrain-core we transcribed an audiobook ("[The Snow Queen](https://ia802608.us.archive.org/33/items/andersens_fairytales_librivox/fairytales_06_andersen.mp3)" from Hans Christian Andersen with a duration of 1 hour, 13 minutes, and 38 seconds) with three different computers (see table 1). The figure below shows the processing time of each transcription relative to the length of the speech recording. In this relative processing time (RPT), a transcription is considered ’real time’ when the recording length and the processing time are equal. Subsequently, faster transcriptions lead to an RPT below 1 and slower transcriptions to an RPT time above 1.
 
 | Benchmark results | Used hardware |
 | --- | --- |
 | ![Benchmark](docs/images/benchmark.webp) | ![Hardware](docs/images/hardware.webp) |
 
 ## System requirements
-Windows is fully supported. 
+We support Windows, Debian and MacOS. GPU transcription with NVIDIA CUDA GPUs is supported in Windows and Debian. 
 
-Debian support with manual installation [Wiki instructions](https://github.com/JuergenFleiss/aTrain/wiki/Linux-Support-(in-progress)) 
 
-Currently no MacOS support.
-
-## Installation for users 😎
-Simply access the installer from the Microsoft app store  
-https://apps.microsoft.com/store/detail/atrain/9N15Q44SZNS2
-
-## Installation for developers ⚙️
-
-**You need to have python >=3.10**  
-If you need help with installing that, look at these resources:  
-https://www.python.org/downloads/release/python-31011/
-
-Setup a virtual environment
-```
-python -m venv venv
-```
-Activate the virtual environment
-```
-.\venv\Scripts\activate
-```
-Install aTrain
-```
-pip install aTrain_core@git+https://github.com/JuergenFleiss/aTrain-core.git --extra-index-url https://download.pytorch.org/whl/cu118
-```
-Download ffmpeg and all required models from Whisper and pyannote.audio with a console script
-Note: The user version in the Microsoft store has those assets already included. 
-```
-aTrain_core init
-```
-Run the app with the console script
-```
-aTrain_core start
-```
-
-## How to build a standalone executable 📦
-We use pyinstaller to freeze the code of aTrain and create a standalone executable.  
-**If you want to create your own code package follow these steps:**  
-\
-Clone and install aTrain in **editable mode** 
-```
-git clone https://github.com/JuergenFleiss/aTrain-core.git
-cd aTrain-core
-pip install -e . --extra-index-url https://download.pytorch.org/whl/cu118
-```
-\
-Download ffmpeg and all required models from Whisper and pyannote.audio with a console script
-```
-aTrain init
-```
-Install pyinstaller
-```
-pip install pyinstaller
-```
-Build the executable using the provided instruction in the file "build.spec"
-```
-pyinstaller build.spec
-```
-Congratulations! You just built a standalone executable for aTrain.  
-\
-To open this version of aTrain just go to the output folder (./dist/aTrain) and open the executable (e.g. aTrain.exe for Windows).  
-\
-If you want to go a step further and create an MSIX-installer for aTrain you can use [Advanced Installer Express](https://www.advancedinstaller.com/express-edition.html).  
-For information on how to use Advanced Installer Express refer to their [documentation](https://www.advancedinstaller.com/user-guide/introduction.html).
-
-## Attribution
-The GIFs and Icons in aTrain are from [tenor](https://tenor.com/) and [flaticon](https://www.flaticon.com/). 
