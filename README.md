@@ -1,36 +1,72 @@
 <img src="https://github.com/BANDAS-Center/aTrain/blob/main/docs/images/logo.svg" width="300" alt="Logo">
 
 ## Tl;dr
-aTrain-core: command line interface for the transcription ([faster-whisper](https://github.com/SYSTRAN/faster-whisper)) of audio and video files, including speaker diarization ([pyannote-audio](https://github.com/pyannote/pyannote-audio)). It runs on Windows, MacOS and Debian-based Linux distributions. Supports all the newest models, including Whisper large V3 and distilled large v3 model (English, real time transcription on CPU).
+aTrain-core: A command line interface for the transcription of audio and video files ([faster-whisper](https://github.com/SYSTRAN/faster-whisper)), including speaker diarization ([pyannote-audio](https://github.com/pyannote/pyannote-audio)). It runs on Windows, MacOS and Debian-based Linux distributions. Supports all the newest models, including Whisper large V3 and distilled large v3 model (English, real time transcription on CPU).
 
-If you use aTrain for a publication, please cite [our paper](https://www.sciencedirect.com/science/article/pii/S2214635024000066?via%3Dihub) as per our [license](https://github.com/JuergenFleiss/atrain_core?tab=License-1-ov-file). 
+📝 If you use aTrain for a publication, please cite [our paper](https://www.sciencedirect.com/science/article/pii/S2214635024000066?via%3Dihub) as per our [license](https://github.com/JuergenFleiss/atrain_core?tab=License-1-ov-file). 
 
 ## Installation ⚙️
 
-**You need to have python >=3.10**  
+**You need to have python >=3.10 installed**  
 
-For Windows
+First you need to create and activate a virtual environment
+
+
+**Windows**
 ```
 python -m venv venv
 .\venv\Scripts\activate
 ```
 
-For Debian und MacOS
+**Debian und MacOS**
 ```
 python3 -m venv venv
 source venv/bin/activate
 ```
 
-Windows, Debian and MacOS
+Then you need to clone our repository into that directory including the extra index. The extra index downloads the necessary libraries for GPU support. 
+💡 Note: At the moment, GPU support is only available for Windows and Debian. We are currently working on a solution for MacOS.
+
+**Windows**
 ```
 pip install aTrain_core@git+https://github.com/JuergenFleiss/aTrain-core.git --extra-index-url https://download.pytorch.org/whl/cu118
 ```
+**Debian and MacOS** 
+```
+pip3 install aTrain_core@git+https://github.com/JuergenFleiss/aTrain-core.git --extra-index-url https://download.pytorch.org/whl/cu118
+```
 Linux keeps killing collection of torch? Try adding the flag--no-cache-dir
 
-Usage: 
+## Usage 📚
+
+Here's a list of all possible model configurations with **default settings in bold**. 
+
+![Model Configurations](docs/model_configurations.png)
+
+
+If you wish to keep default settings you can simply run: 
 ```
-aTrain_core transcribe [-h] [--model MODEL] [--language LANGUAGE] [--speaker_detection] [--num_speakers NUM_SPEAKERS] [--device {CPU,GPU}] [--compute_type {float16,int8}] file
+aTrain_core transcribe /path/to/audio/file.mp3
 ```
+By adapting the following flags you can specify 
+
+```
+aTrain_core transcribe /path/to/audio/file.mp3 --model <MODEL> --language <LANGUAGE> --speaker_detection --num_speakers <NUM_SPEAKERS> --device <DEVICE> --compute_type <COMPUTE_TYPE>
+```
+
+💡 Good to know: As opposed to the other specifications where the name of model, etc. has to be stated explicitly, the speaker detection is activated simply by adding the flag ```--speaker_detection```
+
+💡 The specified model in the transcription (either default or other) is automatically downloaded into the ```models```folder in the same ```aTrain_core``` root directory where you can find the ```transcriptions```. The ```aTrain_core```directory can be found in your machine's ```Documents``` folder.
+
+If you wish to download all models (separately from the transcription process), simply run: 
+
+```
+aTrain_core load
+```
+
+
+
+
 
 
 ## Accessible Transcription of Interviews
