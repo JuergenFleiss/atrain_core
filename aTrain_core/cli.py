@@ -8,7 +8,15 @@ import traceback
 from datetime import datetime
 import argparse
 
+def link(uri, label=None):
+    if label is None: 
+        label = uri
+    parameters = ''
 
+    # OSC 8 ; params ; URI ST <name> OSC 8 ;; ST 
+    escape_mask = '\033]8;{};{}\033\\{}\033]8;;\033\\'
+
+    return escape_mask.format(parameters, uri, label)
 
 
 
@@ -77,6 +85,7 @@ def cli():
         try:
             check_inputs_transcribe(file, model, language)
             transcribe(file, file_id, model, language, speaker_detection, num_speakers, device, compute_type, timestamp)
+            print(f"Thank you for using aTrain \n If you use aTrain in a scientific publication, please cite the following paper: {link('Take the aTrain. Introducing an interface for the Accessible Transcription of Interviews')}")
         except Exception as error:
             delete_transcription(file_id)
             traceback_str = traceback.format_exc()
