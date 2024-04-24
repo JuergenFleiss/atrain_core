@@ -37,7 +37,7 @@ def create_file_id(file_path, timestamp):
     """
       # Extract filename from file_path
     file_base_name = os.path.basename(file_path)
-    short_base_name = file_base_name[0:49] if len(file_base_name) >= 50 else file_base_name
+    short_base_name = file_base_name[0:5] if len(file_base_name) >= 5 else file_base_name
     file_id = timestamp + " " + short_base_name
     return file_id
 
