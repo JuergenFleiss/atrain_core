@@ -10,9 +10,7 @@ Learn [how to install](https://github.com/JuergenFleiss/atrain_core#installation
 ## Accessible Transcription of Interviews
 aTrain-core is a command line interface tool for automatically transcribing speech recordings including speaker recognition utilizing state-of-the-art machine learning models. It does so without uploading any data. It was developed by researchers at the Business Analytics and Data Science-Center at the University of Graz and tested by researchers from the Know-Center Graz. 
 
-aTrain-core also comes as the [aTrain app](https://github.com/JuergenFleiss/aTrain) where it is bundled with a nice graphical user interface. Available for Windows (10 and 11) via the Microsoft app store ([Link](https://apps.microsoft.com/store/detail/atrain/9N15Q44SZNS2)) or by downloading the installer from the BANDAS-Center Website ([Link](https://business-analytics.uni-graz.at/de/forschen/atrain/download/)).
-
-For Linux, follow the [instructions](https://github.com/JuergenFleiss/aTrain/wiki/Linux-Support-(in-progress)) in our Wiki.
+aTrain-core also comes as the [aTrain app](https://github.com/JuergenFleiss/aTrain) where it is bundled with a nice graphical user interface. Available for Windows (10 and 11) via the Microsoft app store ([Link](https://apps.microsoft.com/store/detail/atrain/9N15Q44SZNS2)) or by downloading the installer from the BANDAS-Center Website ([Link](https://business-analytics.uni-graz.at/de/forschen/atrain/download/)). For the GUI in Linux, follow the [instructions here](https://github.com/JuergenFleiss/aTrain/wiki/Linux-Support-(in-progress)).
 
 The paper introducing aTrain has been published in the Journal of Behavioral and Experimental Finance. Please cite the published paper if you used aTrain for your research: [Take the aTrain. Introducing an Interface for the Accessible Transcription of Interviews.](https://www.sciencedirect.com/science/article/pii/S2214635024000066)
 
