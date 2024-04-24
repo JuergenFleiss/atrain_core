@@ -77,24 +77,22 @@ source venv/bin/activate
 ```
 
 Then you need to clone our repository into that directory including the extra index. The extra index downloads the necessary libraries for GPU support. 
-💡 Note: At the moment, GPU support is only available for Windows and Debian. We are currently working speeding up the transcriptions on MacOS 🏎️.
 
 **Windows**
 ```
-pip install aTrain_core@git+https://github.com/JuergenFleiss/atrain_core.git --extra-index-url https://download.pytorch.org/whl/cu118
+pip install aTrain_core@git+https://github.com/JuergenFleiss/aTrain_core.git --extra-index-url https://download.pytorch.org/whl/cu118
 ```
 **Debian** 
 ```
-pip3 install aTrain_core@git+https://github.com/JuergenFleiss/atrain_core.git --extra-index-url https://download.pytorch.org/whl/cu118
+pip3 install aTrain_core@git+https://github.com/JuergenFleiss/aTrain_core.git --extra-index-url https://download.pytorch.org/whl/cu118
 ```
 💡 Linux keeps killing collection of torch? Try adding the flag--no-cache-dir
 
 **MacOS** 
 ```
-pip3 install aTrain_core@git+https://github.com/JuergenFleiss/atrain_core.git
+pip3 install aTrain_core@git+https://github.com/JuergenFleiss/aTrain_core.git
 ```
-
-💡 On MacOS the extra index is not needed since GPU is not supported
+💡 Note: At the moment, NVIDIA CUDA GPU support is only available for Windows and Debian. We are working on speeding up the transcriptions on MacOS. Hence no need to install the extra index on MacOS. 
 
 ## Usage 📚
 
