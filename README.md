@@ -113,6 +113,8 @@ aTrain_core transcribe /path/to/audio/file.mp3 --model <MODEL> --language <LANGU
 
 💡 The specified model in the transcription (either default or other) is automatically downloaded into the ```models```folder in the same ```aTrain_core``` root directory where you can find the ```transcriptions```. The ```aTrain_core```directory can be found in your machine's ```Documents``` folder.
 
+💡If you use one of the newer distilled models (currently only ```faster-distil-english``` based on large v3) you need to specify the corresponding language, as they are single language only.
+
 If you wish to download all models (separately from the transcription process), simply run: 
 
 ```
