@@ -27,7 +27,7 @@ setup(
         "transformers",
         "ffmpeg-python>=0.2",
         "pandas",
-        "pyannote.audio==3.1.0"],
+        "pyannote.audio==3.0.0"],
     packages=find_packages(),
     include_package_data=True,
     entry_points={
