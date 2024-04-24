@@ -126,6 +126,6 @@ aTrain_core load
 
 
 ## System requirements
-We support Windows, Debian and MacOS. GPU transcription with NVIDIA CUDA GPUs is supported in Windows and Debian. 
+We support Windows, Debian and MacOS (tested with M1 processors only). GPU transcription with NVIDIA CUDA GPUs is supported in Windows and Debian. 
 
 
