@@ -60,7 +60,7 @@ def cli():
 
     # add check for inputs
     parser_transcribe = subparsers.add_parser('transcribe', help='Start transcription process for an audio file')
-    parser_transcribe.add_argument('file', help='Path to the audio file')
+    parser_transcribe.add_argument('audiofile', help='Path to the audio file')
     parser_transcribe.add_argument("--model", default="large-v3", help="Model to use for transcription")
     parser_transcribe.add_argument("--language", default="auto-detect", help="Language of the audio")
     parser_transcribe.add_argument("--speaker_detection", default=False, action="store_true", help="Enable speaker detection")
@@ -70,7 +70,7 @@ def cli():
 
     args = parser.parse_args()
 
-    file, model, language, speaker_detection, num_speakers, device, compute_type = args.file, args.model, args.language, args.speaker_detection, args.num_speakers, args.device, args.compute_type
+    file, model, language, speaker_detection, num_speakers, device, compute_type = args.audiofile, args.model, args.language, args.speaker_detection, args.num_speakers, args.device, args.compute_type
 
     if args.command == "load":
         print("Downloading all models:")
