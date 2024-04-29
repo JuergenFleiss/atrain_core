@@ -115,10 +115,21 @@ aTrain_core transcribe /path/to/audio/file.mp3 --model <MODEL> --language <LANGU
 
 💡If you use one of the newer distilled models (currently only ```faster-distil-english``` based on large v3) you need to specify the corresponding language, as they are single language only.
 
-If you wish to download all models (separately from the transcription process), simply run: 
+If you wish to download **all** models (separately from the transcription process), simply run: 
 
 ```
-aTrain_core load
+aTrain_core load --model all
+```
+
+Or to download a specific model, run: 
+```
+aTrain_core load --model <MODEL>
+```
+
+And if you want to remove models, you can run: 
+
+```
+aTrain_core remove --model <MODEL>
 ```
 
 

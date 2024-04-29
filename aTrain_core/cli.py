@@ -3,7 +3,7 @@ from .check_inputs import check_inputs_transcribe
 from .outputs import create_file_id, delete_transcription
 from .transcribe import transcribe
 from .globals import TIMESTAMP_FORMAT
-from .load_resources import download_all_resources
+from .load_resources import download_all_resources, get_model, remove_model
 import traceback
 from datetime import datetime
 import argparse
@@ -21,6 +21,7 @@ def link(uri, label=None):
 
 
 def cli():
+    
     """Command-line interface for running audio transcription with Whisper using aTrain_core.
 
     This CLI tool allows users to transcribe audio files using the Whisper model. It provides two main commands:
@@ -53,14 +54,17 @@ def cli():
     parser = argparse.ArgumentParser(prog='aTrain_core', description='A CLI tool for audio transcription with Whisper')
     subparsers = parser.add_subparsers(dest='command', help='Command for aTrain_core to perform.')
 
-    # Subparser for 'init' command
+    # Subparser for 'load' command
     parser_load = subparsers.add_parser('load', help='Initialize aTrain_core by downloading models')
+    parser_load.add_argument("--model", help="Model to download")
+
+    # Subparser for 'remove' command
+    parser_remove = subparsers.add_parser('remove', help='Remove models')
+    parser_remove.add_argument("--model", help="Model to remove")
 
     # Subparser for 'transcribe' command
-
-    # add check for inputs
     parser_transcribe = subparsers.add_parser('transcribe', help='Start transcription process for an audio file')
-    parser_transcribe.add_argument('audiofile', help='Path to the audio file')
+    parser_transcribe.add_argument("audiofile", help="Path to the audio file")
     parser_transcribe.add_argument("--model", default="large-v3", help="Model to use for transcription")
     parser_transcribe.add_argument("--language", default="auto-detect", help="Language of the audio")
     parser_transcribe.add_argument("--speaker_detection", default=False, action="store_true", help="Enable speaker detection")
@@ -70,21 +74,29 @@ def cli():
 
     args = parser.parse_args()
 
-    file, model, language, speaker_detection, num_speakers, device, compute_type = args.audiofile, args.model, args.language, args.speaker_detection, args.num_speakers, args.device, args.compute_type
-
+    
     if args.command == "load":
-        print("Downloading all models:")
-        download_all_resources()
-        print("Finished")
+        if args.model == "all":
+            print("Downloading all models:")
+            download_all_resources()
+            print("All models downloaded")
+        else:
+            print(f"Downloading model {args.model}")
+            get_model(args.model)
+            print(f"Model {args.model} downloaded")
+
+    elif args.command == "remove":
+        remove_model(args.model)
+        print(f"Model {args.model} removed") 
 
     elif args.command == "transcribe":
         print("Running aTrain_core")
         timestamp = datetime.now().strftime(TIMESTAMP_FORMAT)
-        file_id = create_file_id(file, timestamp)
+        file_id = create_file_id(args.audiofile, timestamp)
      
         try:
-            check_inputs_transcribe(file, model, language)
-            transcribe(file, file_id, model, language, speaker_detection, num_speakers, device, compute_type, timestamp)
+            check_inputs_transcribe(args.audiofile, args.model, args.language)
+            transcribe(args.audiofile, file_id, args.model, args.language, args.speaker_detection, args.num_speakers, args.device, args.compute_type, timestamp)
             print(f"Thank you for using aTrain \nIf you use aTrain in a scientific publication, please cite our paper:\n'Take the aTrain. Introducing an interface for the Accessible Transcription of Interviews'\navailable under: {link('https://www.sciencedirect.com/science/article/pii/S2214635024000066')}")
         except Exception as error:
             delete_transcription(file_id)

@@ -50,5 +50,13 @@ def get_model(model):
     return model_path
 
 
+def remove_model(model):
+    model_path = os.path.join(ATRAIN_DIR, "models", model)
+    print(f"Removing model {model} at path: {model_path}")
+    if os.path.exists(model_path):
+        shutil.rmtree(model_path)  # This deletes the directory and all its contents
+        
+
+
 if __name__ == "__main__":
     ...
