@@ -31,8 +31,8 @@ class CustomPipeline(Pipeline):
         pipeline_name = config["pipeline"]["name"]
         Klass = get_class_by_name(pipeline_name, default_module_name="pyannote.pipeline.blocks")
         params = config["pipeline"].get("params", {})
-        path_segmentation_model = os.path.join(model_path,"diarize_segmentation.bin")
-        path_embedding_model = os.path.join(model_path,"diarize_embedding.bin")
+        path_segmentation_model = os.path.join(model_path,"segmentation_pyannote.bin")
+        path_embedding_model = os.path.join(model_path,"embedding_pyannote.bin")
         params["segmentation"] = path_segmentation_model.replace('\\', '/')
         print(params["segmentation"])
         params["embedding"] = path_embedding_model.replace('\\', '/')
