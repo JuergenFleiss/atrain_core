@@ -40,7 +40,7 @@ def cli():
 
         Arguments:
           - <path_to_audio_file>: Path to the audio file to transcribe.
-          - --model MODEL: Model to use for transcription (default is 'large-v2').
+          - --model MODEL: Model to use for transcription (default is 'large-v3').
           - --language LANGUAGE: Language of the audio (default is 'auto-detect').
           - --speaker_detection: Enable speaker detection (optional).
           - --num_speakers NUM_SPEAKERS: Number of speakers (default is 'auto-detect').
