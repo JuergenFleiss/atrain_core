@@ -50,6 +50,7 @@ aTrain-core can either run on the CPU or an NVIDIA GPU (CUDA toolkit installatio
 ## Benchmarks
 For testing the processing time of aTrain-core we transcribe a [conversation between Christine Lagarde and Andrea Enria at the Fifth ECB Forum on Banking Supervision 2023](https://www.youtube.com/watch?v=kd7e3OXkajY) published on YouTube by the European Central Bank under a Creative Commons license , downloaded as 320p MP4 video file. The file has a duration of exactly 22 minutes and was transcribed on different computing devices with speaker detection enabled. The figure below shows the processing time of each transcription.
 
+Transcription Time for 00:22:00 File:
 | Computing Device       |  large-v3   | Distil large-v3   |
 | ---                    | ---         | ---               |
 | CPU: Ryzen 6850U       | 00:33:02    | 00:13:30          |
