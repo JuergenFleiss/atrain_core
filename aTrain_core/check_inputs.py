@@ -18,7 +18,6 @@ def check_inputs_transcribe(file, model, language, device):
     file_correct = check_file(file)
     model_correct = check_model(model, language)
     language_correct = check_language(language)
-    device_correct = check_device(device)
 
     if not file_correct and model_correct and language_correct:
         raise ValueError("Incorrect input. Please check the file, model and language inputs.")
@@ -46,13 +45,15 @@ def check_file(file):
 
 def check_device(device):
     system = platform.system()
-    if system in ["Windows", "Linux"]:
-        if device == "GPU":
+    #if system in ["Windows", "Linux"]:
+    if device == "GPU":
+        from torch import cuda
+        cuda_available = cuda.is_available()
+        if cuda_available:
             return device
-    elif system == "Darwin":
-        if device == "GPU":
-            raise ValueError("GPU is not supported on MacOS. Please choose 'CPU' instead.")
-
+        else:
+            raise ValueError("GPU is not available. Please choose --device CPU instead.")
+    
 def check_model(model, language):
     """Check if the provided model and language are valid for transcription.
 
