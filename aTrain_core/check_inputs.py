@@ -44,8 +44,6 @@ def check_file(file):
 
 
 def check_device(device):
-    system = platform.system()
-    #if system in ["Windows", "Linux"]:
     if device == "GPU":
         from torch import cuda
         cuda_available = cuda.is_available()
