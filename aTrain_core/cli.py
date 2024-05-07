@@ -95,7 +95,7 @@ def cli():
         file_id = create_file_id(args.audiofile, timestamp)
      
         try:
-            check_inputs_transcribe(args.audiofile, args.model, args.language)
+            check_inputs_transcribe(args.audiofile, args.model, args.language, args.device)
             transcribe(args.audiofile, file_id, args.model, args.language, args.speaker_detection, args.num_speakers, args.device, args.compute_type, timestamp)
             print(f"Thank you for using aTrain \nIf you use aTrain in a scientific publication, please cite our paper:\n'Take the aTrain. Introducing an interface for the Accessible Transcription of Interviews'\navailable under: {link('https://www.sciencedirect.com/science/article/pii/S2214635024000066')}")
         except Exception as error:
