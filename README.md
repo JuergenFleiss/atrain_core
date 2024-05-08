@@ -81,17 +81,17 @@ Then you need to clone our repository into that directory including the extra in
 
 **Windows**
 ```
-pip install aTrain_core@git+https://github.com/JuergenFleiss/aTrain_core.git --extra-index-url https://download.pytorch.org/whl/cu121
+pip install aTrain_core@git+https://github.com/JuergenFleiss/aTrain_core.git@update_fasterwhisper_pyannote --extra-index-url https://download.pytorch.org/whl/cu121
 ```
 **Debian** 
 ```
-pip3 install aTrain_core@git+https://github.com/JuergenFleiss/aTrain_core.git --extra-index-url https://download.pytorch.org/whl/cu121
+pip3 install aTrain_core@git+https://github.com/JuergenFleiss/aTrain_core.git@update_fasterwhisper_pyannote --extra-index-url https://download.pytorch.org/whl/cu121
 ```
 💡 Linux keeps killing collection of torch? Try adding the flag--no-cache-dir
 
 **MacOS** 
 ```
-pip3 install aTrain_core@git+https://github.com/JuergenFleiss/aTrain_core.git
+pip3 install aTrain_core@git+https://github.com/JuergenFleiss/aTrain_core.git@update_fasterwhisper_pyannote
 ```
 💡 Note: At the moment, NVIDIA CUDA GPU support is only available for Windows and Debian. We are working on speeding up the transcriptions on MacOS. Hence no need to install the extra index on MacOS. 
 
