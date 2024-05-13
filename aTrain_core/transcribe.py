@@ -1,6 +1,7 @@
 from .outputs import create_output_files, named_tuple_to_dict, transform_speakers_results, create_directory, add_processing_time_to_metadata, create_metadata, write_logfile
 from .globals import SAMPLING_RATE, ATRAIN_DIR
 from .load_resources import get_model
+from .GUI_integration import EventSender
 from faster_whisper.audio import decode_audio
 import numpy as np
 import gc, torch #Import inside the function to speed up the startup time of the destkop app.
@@ -68,7 +69,7 @@ def transcription_with_progress_bar(transcription_segments, info):
 
     
 
-def transcribe (audio_file, file_id, model, language, speaker_detection, num_speakers, device, compute_type, timestamp):
+def transcribe (audio_file, file_id, model, language, speaker_detection, num_speakers, device, compute_type, timestamp, GUI : EventSender = EventSender()):
     """Transcribes audio file with specified parameters.
 
     Args:
@@ -85,6 +86,7 @@ def transcribe (audio_file, file_id, model, language, speaker_detection, num_spe
     Returns:
         None
     """ 
+    #Send data to the GUI e.g., like so -> GUI.task_info("current task")
     create_directory(file_id)
     write_logfile("Directory created", file_id)
     language = None if language == "auto-detect" else language
