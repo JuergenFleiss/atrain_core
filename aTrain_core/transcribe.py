@@ -13,21 +13,22 @@ from importlib.resources import files
 import yaml
 import json
 import os
+from time import time
 from tqdm import tqdm
-from pyannote.audio.pipelines.utils.hook import ProgressHook, Hooks, TimingHook, ArtifactHook
-from typing import Any, Mapping, Optional, Text
+from pyannote.audio.pipelines.utils.hook import ProgressHook
+from typing import Mapping, Optional, Iterable, Optional, Text, Any
 import json
 import os
 from .step_estimator import QuadraticRegressionModel
 
 
-from typing import BinaryIO, Iterable, List, NamedTuple, Optional, Tuple, Union
+from typing import Iterable, Optional
 
 import ctranslate2
 import numpy as np
 
-from faster_whisper.audio import decode_audio, pad_or_trim
-from faster_whisper.tokenizer import _LANGUAGE_CODES, Tokenizer
+from faster_whisper.audio import decode_audio
+from faster_whisper.tokenizer import Tokenizer
 
 
 class CustomPipeline(Pipeline):
@@ -66,6 +67,7 @@ class CustomProgressHook(ProgressHook):
         total: Optional[int] = None,
         completed: Optional[int] = None,
     ):
+        
         super().__call__(step_name, step_artifact, file, total, completed)
 
         # Print the current step and progress
@@ -118,8 +120,10 @@ class CountingWhisperModel(WhisperModel):
         # Reset total segments counter
         self.total_segments = 0
 
+        start_time = time()
         # Your existing code for generating segments
         segments = super().generate_segments(features, tokenizer, options, encoder_output)
+        print(f"Time taken to generate segments: {time() - start_time:.2f}s")
 
         # Count segments
         self.total_segments = sum(1 for _ in segments)
@@ -132,6 +136,7 @@ class CountingWhisperModel(WhisperModel):
 
 def calculate_steps(speaker_detection, nr_segments, audio_duration):
     # Initialize model
+    start_time = time()
     model = QuadraticRegressionModel()
 
     # Train the model
@@ -152,6 +157,8 @@ def calculate_steps(speaker_detection, nr_segments, audio_duration):
         print(f"Segmentation Prediction for length {audio_duration}: {segmentation_prediction:.0f}")
         print(f"Embedding Prediction for length {audio_duration}: {embedding_prediction:.0f}")
         print(f"(Predicted) total steps with diarization: {total_steps:.0f}")
+    
+    print(f"Time taken to calculate steps: {time() - start_time:.2f}s")
 
     
 
