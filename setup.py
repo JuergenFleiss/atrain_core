@@ -25,7 +25,7 @@ setup(
         "torchaudio==2.2.0",
         "faster-whisper==1.0.2",
         "transformers",
-        "ctranslate2==4.2.1"
+        "ctranslate2==4.2.1",
         "ffmpeg-python>=0.2",
         "pandas",
         "pyannote.audio==3.2.0"],

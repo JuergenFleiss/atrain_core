@@ -12,5 +12,5 @@ SAMPLING_RATE = 16000
 
 # audio lengths and embedding/segmentation steps for the step estimation through quadratic regression
 audio_lengths = np.array([32, 109, 139, 811, 1320])
-embedding_steps = np.array([6, 20, 26, 152, 247])
 segmentation_steps = np.array([56, 211, 270, 1614, 2633])
+embedding_steps = np.array([6, 20, 26, 152, 247])

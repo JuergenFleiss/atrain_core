@@ -7,28 +7,23 @@ import numpy as np
 import gc, torch #Import inside the function to speed up the startup time of the destkop app.
 from faster_whisper import WhisperModel
 from faster_whisper.transcribe import TranscriptionOptions, Segment
+from faster_whisper.audio import decode_audio
+from faster_whisper.tokenizer import Tokenizer
 from pyannote.audio import Pipeline
 from pyannote.core.utils.helper import get_class_by_name
+from pyannote.audio.pipelines.utils.hook import ProgressHook
 from importlib.resources import files
 import yaml
 import json
+import math
 import os
-from time import time
+import time
 from tqdm import tqdm
-from pyannote.audio.pipelines.utils.hook import ProgressHook
 from typing import Mapping, Optional, Iterable, Optional, Text, Any
-import json
-import os
 from .step_estimator import QuadraticRegressionModel
-
-
-from typing import Iterable, Optional
-
 import ctranslate2
-import numpy as np
 
-from faster_whisper.audio import decode_audio
-from faster_whisper.tokenizer import Tokenizer
+
 
 
 class CustomPipeline(Pipeline):
@@ -59,6 +54,25 @@ class CustomPipeline(Pipeline):
         return pipeline
     
 class CustomProgressHook(ProgressHook):
+    """
+    A custom progress hook that updates the GUI and prints progress information during processing.
+
+    Attributes:
+        GUI (EventSender): An object responsible for sending events to the GUI.
+        completed_steps (int): The number of completed steps.
+        total_steps (int): The total number of steps.
+
+    Methods:
+        __call__(step_name, step_artifact, file=None, total=None, completed=None):
+            Updates the GUI and prints the current step and progress information.
+    """
+    def __init__(self, GUI: EventSender, completed_steps, total_steps):
+        super().__init__()
+        self.GUI = GUI
+        self.completed_steps = completed_steps
+        self.total_steps = total_steps
+        
+
     def __call__(
         self,
         step_name: Text,
@@ -72,11 +86,27 @@ class CustomProgressHook(ProgressHook):
 
         # Print the current step and progress
         print(f"Current step: {self.step_name}")
+        self.GUI.task_info(f"{self.step_name}")
+        if self.step_name == "speaker_counting" or self.step_name == "discrete_diarization":
+            self.completed_steps += 1
+            print(f"Progress total: {self.completed_steps}/{self.total_steps}")
+            self.GUI.progress_info(self.completed_steps, self.total_steps)
+        
         if total is not None and completed is not None:
-            print(f"Progress: {completed}/{total}")
+            if completed != 0:
+                self.completed_steps += 1
+                print(f"Progress of {self.step_name} : {completed}/{total}")
+                print(f"Progress total: {self.completed_steps}/{self.total_steps}")
+                self.GUI.progress_info(self.completed_steps, self.total_steps)
+        
+        
+                
+                
+                
+                
 
             
-def transcription_with_progress_bar(transcription_segments, info):
+def transcription_with_progress_bar(transcription_segments, info, GUI : EventSender, completed_steps, total_steps):
     """Transcribes audio segments with progress bar.
 
     Args:
@@ -93,19 +123,36 @@ def transcription_with_progress_bar(transcription_segments, info):
     
 
     with tqdm(total=total_duration, unit=" audio seconds", desc="Transcribing with Whisper") as pbar:
+        GUI.task_info("transcribing with Whisper model")
         for nr, segment in enumerate(transcription_segments):
-            print(f"Segment {nr}: {segment.text}")
+            #print(f"Segment {nr}: {segment.text}")
+            completed_steps +=1
+            print(f"Progress: {completed_steps}/{total_steps}")
+            GUI.progress_info(completed_steps, total_steps)
+        
+            
             transcription_segments_new.append(segment)
             pbar.update(segment.end - timestamps)
             timestamps = segment.end
         if timestamps < info.duration: # silence at the end of the audio
             pbar.update(info.duration - timestamps)
-        
-    print(len(transcription_segments_new))
+
+    #print(len(transcription_segments_new))
+    
     return transcription_segments_new
             
 
 class CountingWhisperModel(WhisperModel):
+    """
+    A subclass of WhisperModel that counts the total number of generated segments during transcription.
+
+    Attributes:
+        total_segments (int): The total number of segments generated during the last transcription.
+
+    Methods:
+        generate_segments(features, tokenizer, options, encoder_output=None):
+            Generates segments from the input features and counts the total number of segments.
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.total_segments = 0
@@ -117,26 +164,46 @@ class CountingWhisperModel(WhisperModel):
             options: TranscriptionOptions,
             encoder_output: Optional[ctranslate2.StorageView] = None,
     ) -> Iterable[Segment]:
+        """
+        Generates segments from the input features and counts the total number of segments.
+
+        Args:
+            features (np.ndarray): The input features for the transcription.
+            tokenizer (Tokenizer): The tokenizer used for the transcription.
+            options (TranscriptionOptions): Options for the transcription process.
+            encoder_output (Optional[ctranslate2.StorageView]): Optional precomputed encoder output.
+
+        Returns:
+            Iterable[Segment]: An iterable of Segment objects generated from the input features.
+        """
+
         # Reset total segments counter
         self.total_segments = 0
 
-        start_time = time()
-        # Your existing code for generating segments
+        # Generating segments for the counter
         segments = super().generate_segments(features, tokenizer, options, encoder_output)
-        print(f"Time taken to generate segments: {time() - start_time:.2f}s")
 
         # Count segments
         self.total_segments = sum(1 for _ in segments)
 
-        # Return the generator again for iteration
+        # Generating segments again for further processing
         segments = super().generate_segments(features, tokenizer, options, encoder_output)
 
         return segments
     
 
 def calculate_steps(speaker_detection, nr_segments, audio_duration):
+    """Calculates the total number of steps for the transcription process.
+
+    Args:
+        speaker_detection (bool): Whether to perform speaker detection.
+        nr_segments (int): Number of segments.
+        audio_duration (int): Duration of the audio.
+
+    Returns:
+        int: Total steps
+    """
     # Initialize model
-    start_time = time()
     model = QuadraticRegressionModel()
 
     # Train the model
@@ -144,21 +211,31 @@ def calculate_steps(speaker_detection, nr_segments, audio_duration):
 
     total_steps = 0
     if not speaker_detection:
-        total_steps == nr_segments
+        total_steps = nr_segments
         print(f"Total steps without diarization: {total_steps}")
+        return total_steps
 
     elif speaker_detection:
         total_steps += nr_segments
         # Predictions
         segmentation_prediction = model.predict_segmentation(audio_duration)
         embedding_prediction = model.predict_embedding(audio_duration)
+
+
+        segmentation_prediction = segmentation_prediction/32
+        # account for one extra process when not divisible by 32
+        if isinstance(segmentation_prediction/32, int):
+            segmentation_prediction = segmentation_prediction
+        else:
+            segmentation_prediction = math.ceil(segmentation_prediction+1)
+
         total_steps += segmentation_prediction + embedding_prediction + 2 # speaker_counting & discrete_diarization are one step each
 
-        print(f"Segmentation Prediction for length {audio_duration}: {segmentation_prediction:.0f}")
-        print(f"Embedding Prediction for length {audio_duration}: {embedding_prediction:.0f}")
-        print(f"(Predicted) total steps with diarization: {total_steps:.0f}")
+        print(f"Segmentation Prediction for {audio_duration}s audio: {segmentation_prediction:.0f} steps")
+        print(f"Embedding Prediction for {audio_duration}s audio: {embedding_prediction:.0f} steps")
+        return total_steps
     
-    print(f"Time taken to calculate steps: {time() - start_time:.2f}s")
+
 
     
 
@@ -175,13 +252,16 @@ def transcribe(audio_file, file_id, model, language, speaker_detection, num_spea
         device (str): Device to use for transcription.
         compute_type (str): Type of compute to use.
         timestamp (str): Timestamp for the transcription.
+        GUI (EventSender, optional): GUI event sender for frontend connection. Defaults to EventSender().
 
     Returns:
         None
     """ 
-
-    number_of_segments = 0
-    #Send data to the GUI e.g., like so -> GUI.task_info("current task")
+    start_time = time.time()
+    num_steps = 0
+    GUI.task_info("preparing transcription")
+    print("Preparing transcription")
+    GUI.progress_info(num_steps, 100) # we cannot calculate the total number of steps yet, so default is 100
     create_directory(file_id)
     write_logfile("Directory created", file_id)
     language = None if language == "auto-detect" else language
@@ -198,6 +278,9 @@ def transcribe(audio_file, file_id, model, language, speaker_detection, num_spea
     model_path = get_model(model)
     write_logfile("Model loaded", file_id)
     transcription_model = CountingWhisperModel(model_path,device,compute_type=compute_type)
+    #print(f"Transcription segments of faster whisper {transcription_model.total_segments}")
+    print(f"Time taken from start to init model {time.time()-start_time}")
+
     models_config_path = str(files("aTrain_core.models").joinpath("models.json"))
     f = open(models_config_path, "r")
     models = json.load(f)
@@ -205,28 +288,34 @@ def transcribe(audio_file, file_id, model, language, speaker_detection, num_spea
     if models[model]["type"] == "distil":
         write_logfile("Transcribing with distil model", file_id)
         transcription_segments, info = transcription_model.transcribe(audio=audio_array,vad_filter=True, beam_size=5, word_timestamps=True,language=language, no_speech_threshold=0.6, condition_on_previous_text=False)
-        calculate_steps(speaker_detection, transcription_model.total_segments, audio_duration)
-        transcription_segments = transcription_with_progress_bar(transcription_segments, info)
-        transcript = {"segments":[named_tuple_to_dict(segment) for segment in transcription_segments]} # wenn man die beiden umdreht also progress bar zuerst damit er schön läuft, dann ist das segments dict leer, sprich es gibt keine transkription
-        write_logfile("Transcription successful", file_id)
-
+    
     else:
         write_logfile("Transcribing with regular multilingual model", file_id)
         transcription_segments, info = transcription_model.transcribe(audio=audio_array,vad_filter=True, beam_size=5, word_timestamps=True,language=language,max_new_tokens=128, no_speech_threshold=0.6, condition_on_previous_text=False)
-        calculate_steps(speaker_detection, transcription_model.total_segments, audio_duration)
-        transcription_segments = transcription_with_progress_bar(transcription_segments, info)
-        transcript = {"segments":[named_tuple_to_dict(segment) for segment in transcription_segments]} # wenn man die beiden umdreht also progress bar zuerst damit er schön läuft, dann ist das segments dict leer, sprich es gibt keine transkription
-        write_logfile("Transcription successful", file_id)
+
+    
+    print(f"Time taken from start until getting the transcription segments and info via transcription_model.transcribe {time.time()-start_time}")
+    print(f"Transcription segments of faster whisper {transcription_model.total_segments}")
+    total_steps = math.ceil(calculate_steps(speaker_detection, transcription_model.total_segments, audio_duration))
+    GUI.progress_info(num_steps, total_steps)
+    print(f"Progress {num_steps}/{total_steps}")
+    
+    transcription_segments = transcription_with_progress_bar(transcription_segments, info, GUI, num_steps, total_steps)
+    transcript = {"segments":[named_tuple_to_dict(segment) for segment in transcription_segments]} # wenn man die beiden umdreht also progress bar zuerst damit er schön läuft, dann ist das segments dict leer, sprich es gibt keine transkription
+    num_steps = transcription_model.total_segments
+    write_logfile("Transcription successful", file_id) 
 
 
     del transcription_model; gc.collect(); torch.cuda.empty_cache()
     
     if not speaker_detection:
         print(f"Finishing up")
+        GUI.task_info("Creating output files")
         create_output_files(transcript, speaker_detection, file_id)
         write_logfile("No speaker detection. Created output files", file_id)
         add_processing_time_to_metadata(file_id)
         write_logfile("Processing time added to metadata", file_id)
+        GUI.finished_info(file_id)
 
     if speaker_detection:
         print("Loading speaker detection model")
@@ -235,19 +324,25 @@ def transcribe(audio_file, file_id, model, language, speaker_detection, num_spea
         diarize_model = CustomPipeline.from_pretrained(model_path).to(torch.device("cpu"))
         write_logfile("Detecting speakers", file_id)
         audio_array = { "waveform": torch.from_numpy(audio_array[None, :]), "sample_rate": SAMPLING_RATE}
-        with CustomProgressHook() as hook:
+        with CustomProgressHook(GUI, num_steps, total_steps) as hook:
             diarization_segments = diarize_model(audio_array,min_speakers=min_speakers, max_speakers=max_speakers, hook=hook)
-           
+        
+        if num_steps < total_steps:
+            num_steps = total_steps
+            GUI.progress_info(num_steps, total_steps)
+            print(f"Progress {num_steps}/{total_steps}")
         speaker_results = transform_speakers_results(diarization_segments)
         write_logfile("Transformed diarization segments to speaker results", file_id)
         del diarize_model; gc.collect(); torch.cuda.empty_cache()
         transcript_with_speaker = assign_word_speakers(speaker_results,transcript)
         write_logfile("Assigned speakers to words", file_id)
         print("Finishing up")
+        GUI.task_info("Creating output files")
         create_output_files(transcript_with_speaker, speaker_detection, file_id)
         write_logfile("Created output files", file_id)
         add_processing_time_to_metadata(file_id)
         write_logfile("Processing time added to metadata", file_id)
+        GUI.finished_info(file_id)
 
 def assign_word_speakers(diarize_df, transcript_result, fill_nearest=False):
     """Assigns speakers to transcribed words.
