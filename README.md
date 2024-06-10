@@ -91,7 +91,7 @@ pip3 install aTrain_core@git+https://github.com/JuergenFleiss/aTrain_core.git --
 
 **MacOS** 
 ```
-pip3 install aTrain_core@git+https://github.com/JuergenFleiss/aTrain_core.git@update_fasterwhisper_pyannote
+pip3 install aTrain_core@git+https://github.com/JuergenFleiss/aTrain_core.git
 ```
 💡 Note: At the moment, NVIDIA CUDA GPU support is only available for Windows and Debian. We are working on speeding up the transcriptions on MacOS. Hence no need to install the extra index on MacOS. 
 
