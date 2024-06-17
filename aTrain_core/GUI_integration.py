@@ -2,6 +2,7 @@ from multiprocessing import Queue
 from queue import Full
 from typing import List
 import json
+import os
 
 class EventSender:
     def __init__(self, maxsize : int = 10):
@@ -44,4 +45,4 @@ class EventSender:
 
     def finished_info(self, file_id : str):
         """Send the URL for downloading / accessing the finished transcription to the frontend."""
-        self.__send(data=file_id, event="finished")
+        self.__send(os.path.join("open_directory", file_id), event="finished")
