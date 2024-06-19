@@ -28,7 +28,8 @@ setup(
         "ctranslate2==4.2.1",
         "ffmpeg-python>=0.2",
         "pandas",
-        "pyannote.audio==3.2.0"],
+        "pyannote.audio==3.2.0",
+        "numpy==1.26.4"],
     packages=find_packages(),
     include_package_data=True,
     entry_points={

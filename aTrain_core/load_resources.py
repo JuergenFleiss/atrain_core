@@ -8,6 +8,9 @@ from tqdm import tqdm
 import platform
 from .globals import ATRAIN_DIR
 
+system = platform.system()
+
+
 def download_all_resources():
     """Downloads all resources including models."""
     download_all_models()
@@ -43,7 +46,10 @@ def get_model(model):
     
     models_config = load_model_config_file()
     model_info = models_config[model]
-    model_path = os.path.join(ATRAIN_DIR, "models", model)
+    if system == "Linux":
+        model_path = os.path.join("~/.local/share/aTrain", "models", model)
+    if system in ["Windows", "Darwin"]:
+        model_path = os.path.join(ATRAIN_DIR, "models", model)
     if not os.path.exists(model_path):
         snapshot_download(repo_id=model_info["repo_id"], revision=model_info["revision"], local_dir=model_path, local_dir_use_symlinks=False)
         print(f"Model downloaded to {model_path}")
@@ -51,7 +57,10 @@ def get_model(model):
 
 
 def remove_model(model):
-    model_path = os.path.join(ATRAIN_DIR, "models", model)
+    if system == "Linux":
+        model_path = os.path.join("~/.local/share/aTrain", "models", model)
+    if system in ["Windows", "Darwin"]:
+        model_path = os.path.join(ATRAIN_DIR, "models", model)
     print(f"Removing model {model} at path: {model_path}")
     if os.path.exists(model_path):
         shutil.rmtree(model_path)  # This deletes the directory and all its contents
