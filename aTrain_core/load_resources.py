@@ -47,7 +47,8 @@ def get_model(model):
     models_config = load_model_config_file()
     model_info = models_config[model]
     if system == "Linux":
-        model_path = os.path.join("~/.local/share/aTrain", "models", model)
+        model_path = os.path.join(ATRAIN_DIR, "models", model)
+        #model_path = os.path.join("~/.local/share/aTrain", "models", model)
     if system in ["Windows", "Darwin"]:
         model_path = os.path.join(ATRAIN_DIR, "models", model)
     if not os.path.exists(model_path):
@@ -58,7 +59,8 @@ def get_model(model):
 
 def remove_model(model):
     if system == "Linux":
-        model_path = os.path.join("~/.local/share/aTrain", "models", model)
+        model_path = os.path.join(ATRAIN_DIR, "models", model)
+        #model_path = os.path.join("~/.local/share/aTrain", "models", model)
     if system in ["Windows", "Darwin"]:
         model_path = os.path.join(ATRAIN_DIR, "models", model)
     print(f"Removing model {model} at path: {model_path}")
