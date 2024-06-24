@@ -84,19 +84,14 @@ class CustomProgressHook(ProgressHook):
         
         super().__call__(step_name, step_artifact, file, total, completed)
 
-        # Print the current step and progress
-        print(f"Current step: {self.step_name}")
         self.GUI.task_info(f"{self.step_name}")
         if self.step_name == "speaker_counting" or self.step_name == "discrete_diarization":
             self.completed_steps += 1
-            print(f"Progress total: {self.completed_steps}/{self.total_steps}")
             self.GUI.progress_info(self.completed_steps, self.total_steps)
         
         if total is not None and completed is not None:
             if completed != 0:
                 self.completed_steps += 1
-                print(f"Progress of {self.step_name} : {completed}/{total}")
-                print(f"Progress total: {self.completed_steps}/{self.total_steps}")
                 self.GUI.progress_info(self.completed_steps, self.total_steps)
         
         
@@ -125,7 +120,6 @@ def transcription_with_progress_bar(transcription_segments, info, GUI : EventSen
     with tqdm(total=total_duration, unit=" audio seconds", desc="Transcribing with Whisper") as pbar:
         GUI.task_info("transcribing with Whisper model")
         for nr, segment in enumerate(transcription_segments):
-            #print(f"Segment {nr}: {segment.text}")
             completed_steps +=1
             print(f"Progress: {completed_steps}/{total_steps}")
             GUI.progress_info(completed_steps, total_steps)
@@ -137,7 +131,6 @@ def transcription_with_progress_bar(transcription_segments, info, GUI : EventSen
         if timestamps < info.duration: # silence at the end of the audio
             pbar.update(info.duration - timestamps)
 
-    #print(len(transcription_segments_new))
     
     return transcription_segments_new
             
@@ -230,9 +223,6 @@ def calculate_steps(speaker_detection, nr_segments, audio_duration):
             segmentation_prediction = math.ceil(segmentation_prediction+1)
 
         total_steps += segmentation_prediction + embedding_prediction + 2 # speaker_counting & discrete_diarization are one step each
-
-        print(f"Segmentation Prediction for {audio_duration}s audio: {segmentation_prediction:.0f} steps")
-        print(f"Embedding Prediction for {audio_duration}s audio: {embedding_prediction:.0f} steps")
         return total_steps
     
 
@@ -278,8 +268,6 @@ def transcribe(audio_file, file_id, model, language, speaker_detection, num_spea
     model_path = get_model(model)
     write_logfile("Model loaded", file_id)
     transcription_model = CountingWhisperModel(model_path,device,compute_type=compute_type)
-    #print(f"Transcription segments of faster whisper {transcription_model.total_segments}")
-    print(f"Time taken from start to init model {time.time()-start_time}")
 
     models_config_path = str(files("aTrain_core.models").joinpath("models.json"))
     f = open(models_config_path, "r")
@@ -294,11 +282,8 @@ def transcribe(audio_file, file_id, model, language, speaker_detection, num_spea
         transcription_segments, info = transcription_model.transcribe(audio=audio_array,vad_filter=True, beam_size=5, word_timestamps=True,language=language,max_new_tokens=128, no_speech_threshold=0.6, condition_on_previous_text=False)
 
     
-    print(f"Time taken from start until getting the transcription segments and info via transcription_model.transcribe {time.time()-start_time}")
-    print(f"Transcription segments of faster whisper {transcription_model.total_segments}")
     total_steps = math.ceil(calculate_steps(speaker_detection, transcription_model.total_segments, audio_duration))
     GUI.progress_info(num_steps, total_steps)
-    print(f"Progress {num_steps}/{total_steps}")
     
     transcription_segments = transcription_with_progress_bar(transcription_segments, info, GUI, num_steps, total_steps)
     transcript = {"segments":[named_tuple_to_dict(segment) for segment in transcription_segments]} # wenn man die beiden umdreht also progress bar zuerst damit er schön läuft, dann ist das segments dict leer, sprich es gibt keine transkription
