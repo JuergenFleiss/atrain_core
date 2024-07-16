@@ -6,7 +6,7 @@ import json
 import os
 from tqdm import tqdm
 import platform
-from .own_snapshot_download import snapshot_download
+from .custom_snapshot_download import snapshot_download
 from .globals import ATRAIN_DIR
 
 def download_all_resources():
