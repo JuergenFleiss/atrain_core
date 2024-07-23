@@ -1,2 +1,2 @@
 from .cli import cli
-from .load_resources import download_all_resources
+from .load_resources import download_all_models

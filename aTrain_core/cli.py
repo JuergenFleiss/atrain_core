@@ -3,7 +3,7 @@ from .check_inputs import check_inputs_transcribe
 from .outputs import create_file_id, delete_transcription
 from .transcribe import transcribe
 from .globals import TIMESTAMP_FORMAT
-from .load_resources import download_all_resources, get_model, remove_model
+from .load_resources import download_all_models, get_model, remove_model
 import traceback
 from datetime import datetime
 import argparse
@@ -78,7 +78,7 @@ def cli():
     if args.command == "load":
         if args.model == "all":
             print("Downloading all models:")
-            download_all_resources()
+            download_all_models()
             print("All models downloaded")
         else:
             print(f"Downloading model {args.model}")
