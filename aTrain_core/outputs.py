@@ -7,52 +7,23 @@ import yaml
 from datetime import datetime
 from .globals import TRANSCRIPT_DIR, METADATA_FILENAME, TIMESTAMP_FORMAT, LOG_FILENAME
 
-
-
 def create_directory(file_id):
-    """Creates a directory for storing transcription files.
-
-    Args:
-        file_id (str): Identifier for the file.
-
-    Returns:
-        None
-    """
+    """Creates a directory for storing transcription files."""
     os.makedirs(TRANSCRIPT_DIR, exist_ok=True)
     file_directory = os.path.join(TRANSCRIPT_DIR, file_id)
     os.makedirs(file_directory, exist_ok=True)
     print(f"Created directory at {file_directory}")
     
-
-
 def create_file_id(file_path, timestamp):
-    """Creates a unique identifier for a file composed of the file path and timestamp.
-
-    Args:
-        file_path (str): Path to the file.
-        timestamp (str): Timestamp for the file.
-
-    Returns:
-        str: Unique identifier for the file.
-    """
+    """Creates a unique identifier for a file composed of the file path and timestamp."""
       # Extract filename from file_path
     file_base_name = os.path.basename(file_path)
     short_base_name = file_base_name[0:5] if len(file_base_name) >= 5 else file_base_name
     file_id = timestamp + " " + short_base_name
     return file_id
 
-
 def create_output_files(result, speaker_detection, file_id):
-    """Creates output files based on the transcription result.
-
-    Args:
-        result (dict): Transcription result.
-        speaker_detection (bool): Whether speaker detection was performed.
-        file_id (str): Identifier for the file.
-
-    Returns:
-        None
-    """
+    """Creates output files based on the transcription result."""
     create_json_file(result, file_id)
     create_txt_file(result, file_id, speaker_detection, maxqda=False, timestamps = False)
     create_txt_file(result, file_id,speaker_detection, maxqda=False, timestamps = True)
@@ -60,32 +31,13 @@ def create_output_files(result, speaker_detection, file_id):
     create_srt_file(result, file_id)
 
 def create_json_file(result, file_id):
-    """Creates a JSON file for the transcription result.
-
-    Args:
-        result (dict): Transcription result.
-        file_id (str): Identifier for the file.
-
-    Returns:
-        None
-    """
+    """Creates a JSON file for the transcription result."""
     output_file_text = os.path.join(TRANSCRIPT_DIR,file_id,"transcription.json")
     with open(output_file_text,"w", encoding="utf-8") as json_file:
         json.dump(result, json_file,ensure_ascii=False)
 
 def create_txt_file (result,file_id, speaker_detection, timestamps, maxqda):
-    """Creates a TXT file for the transcription result.
-
-    Args:
-        result (dict): Transcription result.
-        file_id (str): Identifier for the file.
-        speaker_detection (bool): Whether speaker detection was performed.
-        timestamps (bool): Whether to include timestamps.
-        maxqda (bool): Whether to format for MaxQDA.
-
-    Returns:
-        None
-    """
+    """Creates a TXT file for the transcription result."""
     segments = result["segments"]
     match maxqda, timestamps:
          case True, _ :  filename = "transcription_maxqda.txt"
@@ -108,15 +60,7 @@ def create_txt_file (result,file_id, speaker_detection, timestamps, maxqda):
             file.write(text + (" " if maxqda else  "\n"))
 
 def create_srt_file(result,file_id):
-    """Creates a SRT file for the transcription result.
-
-    Args:
-        result (dict): Transcription result.
-        file_id (str): Identifier for the file.
-
-    Returns:
-        None
-    """
+    """Creates a SRT file for the transcription result."""
 
     segments = result["segments"]
     file_path = os.path.join(TRANSCRIPT_DIR,file_id, "transcription.srt")
@@ -131,14 +75,7 @@ def create_srt_file(result,file_id):
             srt_file.write(f"{str(segment['text']).lstrip()}\n\n")
 
 def transform_speakers_results(diarization_segments):    
-    """Transforms diarization segments to speaker results.
-
-    Args:
-        diarization_segments (list): Diarization segments.
-
-    Returns:
-        DataFrame: Dataframe containing speaker information.
-    """
+    """Transforms diarization segments to speaker results."""
 
     diarize_df = pd.DataFrame(diarization_segments.itertracks(yield_label=True))
     diarize_df['start'] = diarize_df[0].apply(lambda x: x.start)
@@ -147,14 +84,7 @@ def transform_speakers_results(diarization_segments):
     return diarize_df
 
 def named_tuple_to_dict(obj):
-    """Converts named tuple to dictionary.
-
-    Args:
-        obj (object): Object to convert.
-
-    Returns:
-        dict: Converted dictionary.
-    """
+    """Converts named tuple to dictionary."""
     if isinstance(obj, dict):
         return {key: named_tuple_to_dict(value) for key, value in obj.items()}
     elif isinstance(obj, list):
@@ -167,14 +97,7 @@ def named_tuple_to_dict(obj):
         return obj
 
 def isnamedtupleinstance(x):
-    """Checks if the object is an instance of namedtuple.
-
-    Args:
-        x (object): Object to check.
-
-    Returns:
-        bool: True if the object is an instance of namedtuple, False otherwise.
-    """
+    """Checks if the object is an instance of namedtuple."""
     _type = type(x)
     bases = _type.__bases__
     if len(bases) != 1 or bases[0] != tuple:
@@ -186,23 +109,7 @@ def isnamedtupleinstance(x):
 
 
 def create_metadata(file_id, filename, audio_duration, model, language, speaker_detection, num_speakers, device, compute_type, timestamp):
-    """Creates metadata file for the transcription.
-
-    Args:
-        file_id (str): Identifier for the file.
-        filename (str): Name of the file.
-        audio_duration (int): Duration of the audio.
-        model (str): Name of the transcription model.
-        language (str): Language used for transcription.
-        speaker_detection (bool): Whether speaker detection was performed.
-        num_speakers (int): Number of speakers detected.
-        device (str): Device used for transcription.
-        compute_type (str): Type of compute used.
-        timestamp (str): Timestamp for the transcription.
-
-    Returns:
-        None
-    """
+    """Creates metadata file for the transcription."""
 
     metadata_file_path = os.path.join(TRANSCRIPT_DIR,file_id,METADATA_FILENAME)
     metadata = {
@@ -221,15 +128,7 @@ def create_metadata(file_id, filename, audio_duration, model, language, speaker_
         yaml.dump(metadata, metadata_file)
 
 def write_logfile(message, file_id):
-    """Writes a log message to the log file.
-
-    Args:
-        message (str): Log message.
-        file_id (str): Identifier for the file.
-
-    Returns:
-        None
-    """
+    """Writes a log message to the log file."""
 
     timestamp = datetime.now().strftime(TIMESTAMP_FORMAT)
     log_file_path = os.path.join(TRANSCRIPT_DIR,file_id,LOG_FILENAME)
@@ -238,14 +137,7 @@ def write_logfile(message, file_id):
 
 
 def add_processing_time_to_metadata(file_id):
-    """Adds processing time information to metadata.
-
-    Args:
-        file_id (str): Identifier for the file.
-
-    Returns:
-        None
-    """
+    """Adds processing time information to metadata."""
 
     metadata_file_path = os.path.join(TRANSCRIPT_DIR,file_id,METADATA_FILENAME)
     with open(metadata_file_path, "r", encoding="utf-8") as metadata_file:
@@ -259,14 +151,7 @@ def add_processing_time_to_metadata(file_id):
         yaml.dump(metadata,metadata_file)
 
 def delete_transcription(file_id):
-    """Deletes the transcription files.
-
-    Args:
-        file_id (str): Identifier for the file.
-
-    Returns:
-        None
-    """
+    """Deletes the transcription files."""
     
     file_id = "" if file_id == "all" else file_id
     directory_name = os.path.join(TRANSCRIPT_DIR,file_id)

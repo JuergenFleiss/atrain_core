@@ -16,11 +16,7 @@ def download_all_models():
         get_model(model)
 
 def load_model_config_file():
-    """Loads the model configuration file.
-
-    Returns:
-        dict: Dictionary containing model configurations.
-    """
+    """Loads the model configuration file."""
 
     # only load large v3
     models_config_path = str(files("aTrain_core.models").joinpath("models.json"))
@@ -29,14 +25,7 @@ def load_model_config_file():
     return models_config
 
 def get_model(model):
-    """Loads a specific model.
-
-    Args:
-        model (str): Name of the model to load.
-
-    Returns:
-        str: Path to the downloaded model.
-    """
+    """Loads a specific model."""
     
     models_config = load_model_config_file()
     model_info = models_config[model]

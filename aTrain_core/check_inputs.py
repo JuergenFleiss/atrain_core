@@ -4,16 +4,7 @@ from importlib.resources import files
 import platform
 
 def check_inputs_transcribe(file, model, language, device):
-    """Check the validity of inputs for the transcription process.
-
-    Args:
-        file (str): Path to the audio file.
-        model (str): Model to use for transcription.
-        language (str): Language of the audio.
-
-    Raises:
-        ValueError: If any of the inputs is incorrect.
-    """
+    """Check the validity of inputs for the transcription process."""
 
     file_correct = check_file(file)
     model_correct = check_model(model, language)
@@ -23,14 +14,7 @@ def check_inputs_transcribe(file, model, language, device):
         raise ValueError("Incorrect input. Please check the file, model and language inputs.")
 
 def check_file(file):
-    """Check if the provided file is in a correct format for transcription.
-
-    Args:
-        file (str): Path to the audio file.
-
-    Returns:
-        bool: True if the file format is correct, False otherwise.
-    """
+    """Check if the provided file is in a correct format for transcription."""
     #if isinstance(file, str):
     filename = file
     # else:
@@ -53,18 +37,7 @@ def check_device(device):
             raise ValueError("GPU is not available. Please choose --device CPU instead.")
     
 def check_model(model, language):
-    """Check if the provided model and language are valid for transcription.
-
-    Args:
-        model (str): Model to use for transcription.
-        language (str): Language of the audio.
-
-    Returns:
-        bool: True if the model and language are valid, False otherwise.
-
-    Raises:
-        ValueError: If the model or language is not available or if the language is not supported by the model.
-    """
+    """Check if the provided model and language are valid for transcription."""
     # better to look into models.json and check if available
     models_config_path = str(files("aTrain_core.models").joinpath("models.json"))
     f = open(models_config_path, "r")
@@ -90,14 +63,7 @@ def check_model(model, language):
     
 
 def check_language(language):
-    """Check if the provided language is supported for transcription.
-
-    Args:
-        language (str): Language of the audio.
-
-    Returns:
-        bool: True if the language is supported, False otherwise.
-    """
+    """Check if the provided language is supported for transcription."""
     # based on which model and double-check with models.json and error if wrong language (e.g. distilled english in french)
     # auto-detect not for distilled models
     # implement check in json if language key is present

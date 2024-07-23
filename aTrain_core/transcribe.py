@@ -29,14 +29,7 @@ import ctranslate2
 class CustomPipeline(Pipeline):
     @classmethod
     def from_pretrained(cls,model_path) -> "Pipeline":
-        """Constructs a custom pipeline from pre-trained models.
-
-        Args:
-            model_path (str): Path to the directory containing pre-trained models.
-
-        Returns:
-            Pipeline: An instance of the custom pipeline configured with the pre-trained models.
-        """
+        """Constructs a custom pipeline from pre-trained models."""
         config_yml = os.path.join(ATRAIN_DIR, "models", "diarize", "config.yaml")
         with open(config_yml, "r") as config_file: 
             config = yaml.load(config_file, Loader=yaml.SafeLoader)
@@ -54,18 +47,7 @@ class CustomPipeline(Pipeline):
         return pipeline
     
 class CustomProgressHook(ProgressHook):
-    """
-    A custom progress hook that updates the GUI and prints progress information during processing.
-
-    Attributes:
-        GUI (EventSender): An object responsible for sending events to the GUI.
-        completed_steps (int): The number of completed steps.
-        total_steps (int): The total number of steps.
-
-    Methods:
-        __call__(step_name, step_artifact, file=None, total=None, completed=None):
-            Updates the GUI and prints the current step and progress information.
-    """
+    """A custom progress hook that updates the GUI and prints progress information during processing."""
     def __init__(self, GUI: EventSender, completed_steps, total_steps):
         super().__init__()
         self.GUI = GUI
@@ -102,15 +84,7 @@ class CustomProgressHook(ProgressHook):
 
             
 def transcription_with_progress_bar(transcription_segments, info, GUI : EventSender, completed_steps, total_steps):
-    """Transcribes audio segments with progress bar.
-
-    Args:
-        transcription_segments (list): List of audio segments to transcribe.
-        info (object): Information about the audio.
-
-    Returns:
-        list: Transcribed audio segments with progress bar.
-    """
+    """Transcribes audio segments with progress bar."""
     total_duration = round(info.duration, 2)  
     timestamps = 0.0  # to get the current segments
     transcription_segments_new = []
@@ -136,16 +110,7 @@ def transcription_with_progress_bar(transcription_segments, info, GUI : EventSen
             
 
 class CountingWhisperModel(WhisperModel):
-    """
-    A subclass of WhisperModel that counts the total number of generated segments during transcription.
-
-    Attributes:
-        total_segments (int): The total number of segments generated during the last transcription.
-
-    Methods:
-        generate_segments(features, tokenizer, options, encoder_output=None):
-            Generates segments from the input features and counts the total number of segments.
-    """
+    """A subclass of WhisperModel that counts the total number of generated segments during transcription."""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.total_segments = 0
@@ -157,19 +122,6 @@ class CountingWhisperModel(WhisperModel):
             options: TranscriptionOptions,
             encoder_output: Optional[ctranslate2.StorageView] = None,
     ) -> Iterable[Segment]:
-        """
-        Generates segments from the input features and counts the total number of segments.
-
-        Args:
-            features (np.ndarray): The input features for the transcription.
-            tokenizer (Tokenizer): The tokenizer used for the transcription.
-            options (TranscriptionOptions): Options for the transcription process.
-            encoder_output (Optional[ctranslate2.StorageView]): Optional precomputed encoder output.
-
-        Returns:
-            Iterable[Segment]: An iterable of Segment objects generated from the input features.
-        """
-
         # Reset total segments counter
         self.total_segments = 0
 
@@ -186,16 +138,7 @@ class CountingWhisperModel(WhisperModel):
     
 
 def calculate_steps(speaker_detection, nr_segments, audio_duration):
-    """Calculates the total number of steps for the transcription process.
-
-    Args:
-        speaker_detection (bool): Whether to perform speaker detection.
-        nr_segments (int): Number of segments.
-        audio_duration (int): Duration of the audio.
-
-    Returns:
-        int: Total steps
-    """
+    """Calculates the total number of steps for the transcription process."""
     # Initialize model
     model = QuadraticRegressionModel()
 
@@ -230,23 +173,7 @@ def calculate_steps(speaker_detection, nr_segments, audio_duration):
     
 
 def transcribe(audio_file, file_id, model, language, speaker_detection, num_speakers, device, compute_type, timestamp, GUI : EventSender = EventSender()):
-    """Transcribes audio file with specified parameters.
-
-    Args:
-        audio_file (str): Path to the audio file.
-        file_id (str): Identifier for the file.
-        model (str): Name of the transcription model.
-        language (str): Language for transcription.
-        speaker_detection (bool): Whether to perform speaker detection.
-        num_speakers (str): Number of speakers for speaker detection.
-        device (str): Device to use for transcription.
-        compute_type (str): Type of compute to use.
-        timestamp (str): Timestamp for the transcription.
-        GUI (EventSender, optional): GUI event sender for frontend connection. Defaults to EventSender().
-
-    Returns:
-        None
-    """ 
+    """Transcribes audio file with specified parameters.""" 
     start_time = time.time()
     num_steps = 0
     GUI.task_info("preparing transcription")
@@ -330,16 +257,7 @@ def transcribe(audio_file, file_id, model, language, speaker_detection, num_spea
         GUI.finished_info(file_id)
 
 def assign_word_speakers(diarize_df, transcript_result, fill_nearest=False):
-    """Assigns speakers to transcribed words.
-
-    Args:
-        diarize_df (DataFrame): Dataframe containing speaker information.
-        transcript_result (dict): Transcription result.
-        fill_nearest (bool, optional): Whether to fill nearest speakers. Defaults to False.
-
-    Returns:
-        dict: Transcription result with assigned speakers.
-    """
+    """Assigns speakers to transcribed words."""
     #Function from whisperx -> see https://github.com/m-bain/whisperX.git
     transcript_segments = transcript_result["segments"]
     for seg in transcript_segments:

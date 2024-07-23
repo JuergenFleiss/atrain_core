@@ -21,35 +21,7 @@ def link(uri, label=None):
 
 
 def cli():
-    
-    """Command-line interface for running audio transcription with Whisper using aTrain_core.
-
-    This CLI tool allows users to transcribe audio files using the Whisper model. It provides two main commands:
-
-    1. 'load': Initializes aTrain_core by downloading required models.
-    2. 'transcribe': Starts the transcription process for an audio file.
-
-    Command usage:
-    1. To initialize aTrain_core and download all required models:
-        aTrain_core load
-
-    2. To transcribe an audio file:
-        aTrain_core transcribe <path_to_audio_file> [--model MODEL] [--language LANGUAGE]
-                                                     [--speaker_detection] [--num_speakers NUM_SPEAKERS]
-                                                     [--device DEVICE] [--compute_type COMPUTE_TYPE]
-
-        Arguments:
-          - <path_to_audio_file>: Path to the audio file to transcribe.
-          - --model MODEL: Model to use for transcription (default is 'large-v3').
-          - --language LANGUAGE: Language of the audio (default is 'auto-detect').
-          - --speaker_detection: Enable speaker detection (optional).
-          - --num_speakers NUM_SPEAKERS: Number of speakers (default is 'auto-detect').
-          - --device DEVICE: Device to use (options are 'CPU' or 'GPU', default is 'CPU').
-          - --compute_type COMPUTE_TYPE: Compute type (options are 'float16' or 'int8', default is 'int8').
-
-    Note: If an error occurs during transcription, the tool automatically deletes the partially created transcription.
-
-    """
+    """Command-line interface for running audio transcription with Whisper using aTrain_core."""
     
     parser = argparse.ArgumentParser(prog='aTrain_core', description='A CLI tool for audio transcription with Whisper')
     subparsers = parser.add_subparsers(dest='command', help='Command for aTrain_core to perform.')
