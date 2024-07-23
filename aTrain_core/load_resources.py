@@ -9,10 +9,6 @@ import platform
 from .custom_snapshot_download import snapshot_download
 from .globals import ATRAIN_DIR
 
-def download_all_resources():
-    """Downloads all resources including models."""
-    download_all_models()
-
 def download_all_models():
     """Downloads all models defined in the model configuration file."""
     models_config = load_model_config_file()
