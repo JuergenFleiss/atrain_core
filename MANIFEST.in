@@ -1,2 +1,1 @@
 recursive-include aTrain_core/models *
-include aTrain_core/ffmpeg*
