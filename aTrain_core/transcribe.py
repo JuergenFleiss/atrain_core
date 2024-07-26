@@ -173,10 +173,8 @@ def calculate_steps(speaker_detection, nr_segments, audio_duration):
 
 def transcribe(audio_file, file_id, model, language, speaker_detection, num_speakers, device, compute_type, timestamp, GUI : EventSender = EventSender()):
     """Transcribes audio file with specified parameters.""" 
-    num_steps = 0
     GUI.task_info("preparing transcription")
     print("Preparing transcription")
-    GUI.progress_info(num_steps, 100) # we cannot calculate the total number of steps yet, so default is 100
     create_directory(file_id)
     write_logfile("Directory created", file_id)
     language = None if language == "auto-detect" else language
