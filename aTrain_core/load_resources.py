@@ -1,13 +1,10 @@
 from importlib.resources import files
 #from huggingface_hub import snapshot_download
 import shutil
-import requests
 import json
 import os
-from tqdm import tqdm
-import platform
 from .custom_snapshot_download import snapshot_download
-from .globals import ATRAIN_DIR
+from .globals import MODELS_DIR
 
 def download_all_models():
     """Downloads all models defined in the model configuration file."""
@@ -29,7 +26,7 @@ def get_model(model):
     
     models_config = load_model_config_file()
     model_info = models_config[model]
-    model_path = os.path.join(ATRAIN_DIR, "models", model)
+    model_path = os.path.join(MODELS_DIR, model)
     if not os.path.exists(model_path):
         snapshot_download(repo_id=model_info["repo_id"], revision=model_info["revision"], local_dir=model_path, local_dir_use_symlinks=False)
         print(f"Model downloaded to {model_path}")
@@ -37,7 +34,7 @@ def get_model(model):
 
 
 def remove_model(model):
-    model_path = os.path.join(ATRAIN_DIR, "models", model)
+    model_path = os.path.join(MODELS_DIR, model)
     print(f"Removing model {model} at path: {model_path}")
     if os.path.exists(model_path):
         shutil.rmtree(model_path)  # This deletes the directory and all its contents

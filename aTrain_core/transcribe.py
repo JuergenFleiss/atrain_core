@@ -1,5 +1,5 @@
 from .outputs import create_output_files, named_tuple_to_dict, transform_speakers_results, create_directory, add_processing_time_to_metadata, create_metadata, write_logfile
-from .globals import SAMPLING_RATE, ATRAIN_DIR, audio_lengths, embedding_steps, segmentation_steps
+from .globals import SAMPLING_RATE, MODELS_DIR, audio_lengths, embedding_steps, segmentation_steps
 from .load_resources import get_model
 from .GUI_integration import EventSender
 from faster_whisper.audio import decode_audio
@@ -30,7 +30,7 @@ class CustomPipeline(Pipeline):
     @classmethod
     def from_pretrained(cls,model_path) -> "Pipeline":
         """Constructs a custom pipeline from pre-trained models."""
-        config_yml = os.path.join(ATRAIN_DIR, "models", "diarize", "config.yaml")
+        config_yml = os.path.join(MODELS_DIR, "diarize", "config.yaml")
         with open(config_yml, "r") as config_file: 
             config = yaml.load(config_file, Loader=yaml.SafeLoader)
         pipeline_name = config["pipeline"]["name"]
