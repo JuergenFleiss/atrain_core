@@ -17,7 +17,6 @@ import yaml
 import json
 import math
 import os
-import time
 from tqdm import tqdm
 from typing import Mapping, Optional, Iterable, Optional, Text, Any
 from .step_estimator import QuadraticRegressionModel
@@ -174,7 +173,6 @@ def calculate_steps(speaker_detection, nr_segments, audio_duration):
 
 def transcribe(audio_file, file_id, model, language, speaker_detection, num_speakers, device, compute_type, timestamp, GUI : EventSender = EventSender()):
     """Transcribes audio file with specified parameters.""" 
-    start_time = time.time()
     num_steps = 0
     GUI.task_info("preparing transcription")
     print("Preparing transcription")
