@@ -43,6 +43,6 @@ class EventSender:
         progress_data = json.dumps({"current" : current, "total" : total})
         self.__send(data = progress_data, event="progress")
 
-    def finished_info(self, file_id : str):
-        """Send the URL for downloading / accessing the finished transcription to the frontend."""
-        self.__send(os.path.join("open_directory", file_id), event="finished")
+    def finished_info(self):
+        """Send an event to the frontend to inidcate that a process has finished."""
+        self.__send(data="", event="finished")
