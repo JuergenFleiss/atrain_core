@@ -5,6 +5,7 @@ import json
 import os
 from .custom_snapshot_download import snapshot_download
 from .globals import MODELS_DIR
+from .GUI_integration import EventSender
 
 def download_all_models():
     """Downloads all models defined in the model configuration file."""
@@ -21,9 +22,8 @@ def load_model_config_file():
         models_config = json.load(models_config_file)
     return models_config
 
-def get_model(model):
+def get_model(model: str , GUI = EventSender()) -> str:
     """Loads a specific model."""
-    
     models_config = load_model_config_file()
     model_info = models_config[model]
     model_path = os.path.join(MODELS_DIR, model)
