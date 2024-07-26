@@ -174,7 +174,6 @@ def transcribe(audio_file, file_id, model, language, speaker_detection, num_spea
         write_logfile("No speaker detection. Created output files", file_id)
         add_processing_time_to_metadata(file_id)
         write_logfile("Processing time added to metadata", file_id)
-        GUI.finished_info()
 
     if speaker_detection:
         print("Loading speaker detection model")
@@ -201,7 +200,6 @@ def transcribe(audio_file, file_id, model, language, speaker_detection, num_spea
         write_logfile("Created output files", file_id)
         add_processing_time_to_metadata(file_id)
         write_logfile("Processing time added to metadata", file_id)
-        GUI.finished_info()
 
 def assign_word_speakers(diarize_df, transcript_result, fill_nearest=False):
     """Assigns speakers to transcribed words."""
