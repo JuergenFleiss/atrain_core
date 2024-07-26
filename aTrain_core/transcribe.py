@@ -1,5 +1,5 @@
 from .outputs import create_output_files, named_tuple_to_dict, transform_speakers_results, create_directory, add_processing_time_to_metadata, create_metadata, write_logfile
-from .globals import SAMPLING_RATE, MODELS_DIR, audio_lengths, embedding_steps, segmentation_steps
+from .globals import SAMPLING_RATE, MODELS_DIR
 from .load_resources import get_model
 from .GUI_integration import EventSender
 from faster_whisper.audio import decode_audio
@@ -19,15 +19,12 @@ import math
 import os
 from tqdm import tqdm
 from typing import Mapping, Optional, Iterable, Optional, Text, Any
-from .step_estimator import QuadraticRegressionModel
+from .step_estimator import calculate_steps
 import ctranslate2
-
-
-
 
 class CustomPipeline(Pipeline):
     @classmethod
-    def from_pretrained(cls,model_path) -> "Pipeline":
+    def from_pretrained(cls,model_path) -> Pipeline:
         """Constructs a custom pipeline from pre-trained models."""
         config_yml = os.path.join(MODELS_DIR, "diarize", "config.yaml")
         with open(config_yml, "r") as config_file: 
@@ -41,7 +38,7 @@ class CustomPipeline(Pipeline):
         print(params["segmentation"])
         params["embedding"] = path_embedding_model.replace('\\', '/')
         print(params["embedding"])
-        pipeline = Klass(**params)
+        pipeline: Pipeline = Klass(**params)
         pipeline.instantiate(config["params"])
         return pipeline
     
@@ -75,20 +72,12 @@ class CustomProgressHook(ProgressHook):
                 self.completed_steps += 1
                 self.GUI.progress_info(self.completed_steps, self.total_steps)
         
-        
-                
-                
-                
-                
-
             
 def transcription_with_progress_bar(transcription_segments, info, GUI : EventSender, completed_steps, total_steps):
     """Transcribes audio segments with progress bar."""
     total_duration = round(info.duration, 2)  
     timestamps = 0.0  # to get the current segments
-    transcription_segments_new = []
-
-    
+    transcription_segments_new = []  
 
     with tqdm(total=total_duration, unit=" audio seconds", desc="Transcribing with Whisper") as pbar:
         GUI.task_info("transcribing with Whisper model")
@@ -96,15 +85,13 @@ def transcription_with_progress_bar(transcription_segments, info, GUI : EventSen
             completed_steps +=1
             print(f"Progress: {completed_steps}/{total_steps}")
             GUI.progress_info(completed_steps, total_steps)
-        
-            
+                    
             transcription_segments_new.append(segment)
             pbar.update(segment.end - timestamps)
             timestamps = segment.end
         if timestamps < info.duration: # silence at the end of the audio
             pbar.update(info.duration - timestamps)
 
-    
     return transcription_segments_new
             
 
@@ -134,42 +121,6 @@ class CountingWhisperModel(WhisperModel):
         segments = super().generate_segments(features, tokenizer, options, encoder_output)
 
         return segments
-    
-
-def calculate_steps(speaker_detection, nr_segments, audio_duration):
-    """Calculates the total number of steps for the transcription process."""
-    # Initialize model
-    model = QuadraticRegressionModel()
-
-    # Train the model
-    model.train(audio_lengths, segmentation_steps, embedding_steps)
-
-    total_steps = 0
-    if not speaker_detection:
-        total_steps = nr_segments
-        print(f"Total steps without diarization: {total_steps}")
-        return total_steps
-
-    elif speaker_detection:
-        total_steps += nr_segments
-        # Predictions
-        segmentation_prediction = model.predict_segmentation(audio_duration)
-        embedding_prediction = model.predict_embedding(audio_duration)
-
-
-        segmentation_prediction = segmentation_prediction/32
-        # account for one extra process when not divisible by 32
-        if isinstance(segmentation_prediction/32, int):
-            segmentation_prediction = segmentation_prediction
-        else:
-            segmentation_prediction = math.ceil(segmentation_prediction+1)
-
-        total_steps += segmentation_prediction + embedding_prediction + 2 # speaker_counting & discrete_diarization are one step each
-        return total_steps
-    
-
-
-    
 
 def transcribe(audio_file, file_id, model, language, speaker_detection, num_speakers, device, compute_type, timestamp, GUI : EventSender = EventSender()):
     """Transcribes audio file with specified parameters.""" 
@@ -204,13 +155,13 @@ def transcribe(audio_file, file_id, model, language, speaker_detection, num_spea
         write_logfile("Transcribing with regular multilingual model", file_id)
         transcription_segments, info = transcription_model.transcribe(audio=audio_array,vad_filter=True, beam_size=5, word_timestamps=True,language=language,max_new_tokens=128, no_speech_threshold=0.6, condition_on_previous_text=False)
 
-    
+    current_step = 0
     total_steps = math.ceil(calculate_steps(speaker_detection, transcription_model.total_segments, audio_duration))
-    GUI.progress_info(num_steps, total_steps)
+    GUI.progress_info(current_step, total_steps)
     
-    transcription_segments = transcription_with_progress_bar(transcription_segments, info, GUI, num_steps, total_steps)
+    transcription_segments = transcription_with_progress_bar(transcription_segments, info, GUI, current_step, total_steps)
     transcript = {"segments":[named_tuple_to_dict(segment) for segment in transcription_segments]} # wenn man die beiden umdreht also progress bar zuerst damit er schön läuft, dann ist das segments dict leer, sprich es gibt keine transkription
-    num_steps = transcription_model.total_segments
+    current_step = transcription_model.total_segments
     write_logfile("Transcription successful", file_id) 
 
 
@@ -232,13 +183,13 @@ def transcribe(audio_file, file_id, model, language, speaker_detection, num_spea
         diarize_model = CustomPipeline.from_pretrained(model_path).to(torch.device("cpu"))
         write_logfile("Detecting speakers", file_id)
         audio_array = { "waveform": torch.from_numpy(audio_array[None, :]), "sample_rate": SAMPLING_RATE}
-        with CustomProgressHook(GUI, num_steps, total_steps) as hook:
+        with CustomProgressHook(GUI, current_step, total_steps) as hook:
             diarization_segments = diarize_model(audio_array,min_speakers=min_speakers, max_speakers=max_speakers, hook=hook)
         
-        if num_steps < total_steps:
-            num_steps = total_steps
-            GUI.progress_info(num_steps, total_steps)
-            print(f"Progress {num_steps}/{total_steps}")
+        if current_step < total_steps:
+            current_step = total_steps
+            GUI.progress_info(current_step, total_steps)
+            print(f"Progress {current_step}/{total_steps}")
         speaker_results = transform_speakers_results(diarization_segments)
         write_logfile("Transformed diarization segments to speaker results", file_id)
         del diarize_model; gc.collect(); torch.cuda.empty_cache()
