@@ -31,7 +31,7 @@ class EventSender:
 
     def task_info(self, task : str):
         """Send the current task to the frontend for display during transcription."""
-        print(task)
+        print(f"TASK INFO: {task}")
         self.__send(data = task, event="task")
 
     def error_info(self, error : str, traceback : str = ""):
@@ -42,7 +42,7 @@ class EventSender:
     def progress_info(self, current : int, total : int):
         """Send a progress update to the frontend for diplay during transcription."""
         progress_data = json.dumps({"current" : current, "total" : total})
-        print(f"TESTING THE EVENT SENDER: {progress_data}")
+        print(f"PROGRESS_INFO: {progress_data}")
         self.__send(data = progress_data, event="progress")
 
     def finished_info(self):
