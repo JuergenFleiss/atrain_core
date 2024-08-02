@@ -13,7 +13,7 @@ from huggingface_hub.constants import (
     HF_HUB_ENABLE_HF_TRANSFER,
     REPO_TYPES,
 )
-from huggingface_hub.file_download import REGEX_COMMIT_HASH, hf_hub_download, repo_folder_name
+from .custom_file_download import REGEX_COMMIT_HASH, hf_hub_download, repo_folder_name
 from huggingface_hub.hf_api import DatasetInfo, HfApi, ModelInfo, SpaceInfo
 from huggingface_hub.utils import (
     GatedRepoError,
@@ -320,9 +320,9 @@ def snapshot_download(
             _inner_hf_hub_download(file)
             completed_steps += 1 # added
             print("file:", file)  # added
-            print(f"teeeest: {completed_steps}/{len(filtered_repo_files)} downloaded") #added
+            print(f"test: {completed_steps}/{len(filtered_repo_files)} downloaded") #added
     else:
-        print("teeeeest files:", filtered_repo_files) #added
+        print("filtered repo files:", filtered_repo_files) #added
         thread_map(
             _inner_hf_hub_download,
             filtered_repo_files,
