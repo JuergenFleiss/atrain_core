@@ -1,11 +1,10 @@
 import os
 from pathlib import Path
-from typing import Dict, List, Literal, Optional, Union
+from typing import Dict, List, Literal, Optional, Union, Callable
 
 import requests
 from tqdm.auto import tqdm as base_tqdm
 from tqdm.contrib.concurrent import thread_map
-
 from huggingface_hub.constants import (
     DEFAULT_ETAG_TIMEOUT,
     DEFAULT_REVISION,
@@ -55,6 +54,7 @@ def snapshot_download(
     tqdm_class: Optional[base_tqdm] = None,
     headers: Optional[Dict[str, str]] = None,
     endpoint: Optional[str] = None,
+    progress_callback: Optional[Callable[[int, int], None]] = None,
 ) -> str:
     """Download repo files.
 
@@ -286,7 +286,7 @@ def snapshot_download(
     # we pass the commit_hash to hf_hub_download
     # so no network call happens if we already
     # have the file locally.
-    def _inner_hf_hub_download(repo_file: str):
+    def _inner_hf_hub_download(repo_file: str, progress_callback: Optional[Callable[[int, int], None]] = None):
         return hf_hub_download(
             repo_id,
             filename=repo_file,
@@ -305,6 +305,9 @@ def snapshot_download(
             force_download=force_download,
             token=token,
             headers=headers,
+            progress_callback=progress_callback,
+            
+
         )
     
     
@@ -312,23 +315,20 @@ def snapshot_download(
     #if HF_HUB_ENABLE_HF_TRANSFER:                                # commented out
     # when using hf_transfer we don't want extra parallelism
         # from the one hf_transfer provides
-    test = True # added
-    if test: # added
-        completed_steps = 0 # added
-        for file in filtered_repo_files: 
-            print(f"Downloading {file}") # added
-            _inner_hf_hub_download(file)
-            completed_steps += 1 # added
-            print("file:", file)  # added
-            print(f"test: {completed_steps}/{len(filtered_repo_files)} downloaded") #added
+    test = True  # Added for testing purposes
+    if test:
+        for file in filtered_repo_files:
+            print(f"Downloading {file}")
+            _inner_hf_hub_download(file, progress_callback=progress_callback)
+
+
     else:
-        print("filtered repo files:", filtered_repo_files) #added
+        print("filtered repo files:", filtered_repo_files)
         thread_map(
-            _inner_hf_hub_download,
+            lambda file: _inner_hf_hub_download(file, progress_callback=progress_callback),
             filtered_repo_files,
             desc=f"Fetching {len(filtered_repo_files)} files",
             max_workers=max_workers,
-            # User can use its own tqdm class or the default one from `huggingface_hub.utils`
             tqdm_class=tqdm_class or hf_tqdm,
         )
 

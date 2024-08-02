@@ -40,7 +40,7 @@ def predict_embedding_steps(length):
     c = -3802017452395983/18014398509481984
     return a * length**2 + b * length + c
 
-def get_total_model_download_steps(model):
+def get_total_model_download_steps(model_name):
     """A function that finds the total download chunks (steps) for a given model. 
     The metadata has been pre-calculated by downloading the models"""
 
@@ -90,5 +90,6 @@ def get_total_model_download_steps(model):
     'chunks_total': 14,
     'model_bin_size': 114102729}]
 
-    total_chunks = model_metadata_dict[model]['chunks_total']
+    total_chunks = next((model['chunks_total'] for model in model_metadata_dict if model['model_name'] == model_name), None)
+
     return total_chunks

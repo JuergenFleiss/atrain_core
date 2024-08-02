@@ -13,7 +13,7 @@ import uuid
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, BinaryIO, Dict, Literal, NoReturn, Optional, Tuple, Union
+from typing import Any, BinaryIO, Dict, Literal, NoReturn, Optional, Tuple, Union, Callable
 from urllib.parse import quote, urlparse
 from .GUI_integration import EventSender
 
@@ -102,7 +102,6 @@ REGEX_COMMIT_HASH = re.compile(r"^[0-9a-f]{40}$")
 REGEX_SHA256 = re.compile(r"^[0-9a-f]{64}$")
 
 _are_symlinks_supported_in_dir: Dict[str, bool] = {}
-
 
 def are_symlinks_supported(cache_dir: Union[str, Path, None] = None) -> bool:
     """Return whether the symlinks are supported on the machine.
@@ -413,6 +412,7 @@ def http_get(
     _nb_retries: int = 5,
     _tqdm_bar: Optional[tqdm] = None,
     GUI: Optional[EventSender] = None,  # Make sure to use Optional and default to None
+    progress_callback: Optional[Callable[[int, int], None]] = None
 ) -> None:
     """Download a remote file and optionally report progress to the frontend."""
 
@@ -479,24 +479,23 @@ def http_get(
     try:
         chunk_counter = 0
         for chunk in r.iter_content(chunk_size=DOWNLOAD_CHUNK_SIZE):
-            # print(f"chunk size: {DOWNLOAD_CHUNK_SIZE}")
-            # print(f"full size: {expected_size}")
-            # print(f"percentage: {DOWNLOAD_CHUNK_SIZE/expected_size}")
             chunk_counter += 1
 
-            if chunk:  # filter out keep-alive new chunks
+            if chunk:
                 chunk_size = len(chunk)
                 progress.update(chunk_size)
                 temp_file.write(chunk)
                 new_resume_size += chunk_size
 
-                # Send progress info to frontend
-                if GUI:
-                    GUI.task_info(f"Downloading file: {displayed_filename}")
-                    GUI.progress_info(current=int((new_resume_size/expected_size)*100), total=(expected_size/expected_size)*100)
+                if progress_callback:
+                    progress_callback(chunk_counter)
+
+                # # Send progress info to callback
+                # if expected_size is not None:
+                #     progress_callback(current=new_resume_size, total=expected_size)
 
                 _nb_retries = 5  # Reset retry count if data is received
-        print(chunk_counter)
+
     except (requests.ConnectionError, requests.ReadTimeout) as e:
         if _nb_retries <= 0:
             logger.warning("Error while downloading from %s: %s\nMax retries exceeded.", url, str(e))
@@ -514,6 +513,7 @@ def http_get(
             _nb_retries=_nb_retries - 1,
             _tqdm_bar=_tqdm_bar,
             GUI=GUI,
+            progress_callback=progress_callback,
         )
 
     progress.close()
@@ -543,6 +543,7 @@ def cached_download(
     token: Union[bool, str, None] = None,
     local_files_only: bool = False,
     legacy_cache_layout: bool = False,
+    progress_callback: Optional[Callable[[int, int], None]] = None,
 ) -> str:
     """
     Download from a given URL and cache it if it's not already present in the
@@ -757,7 +758,8 @@ def cached_download(
             expected_size=expected_size,
             filename=filename,
             force_download=force_download,
-            GUI=GUI
+            GUI=GUI,
+            progress_callback=progress_callback,
         )
 
         if force_filename is None:
@@ -968,6 +970,7 @@ def hf_hub_download(
     resume_download: Optional[bool] = None,
     force_filename: Optional[str] = None,
     local_dir_use_symlinks: Union[bool, Literal["auto"]] = "auto",
+    progress_callback: Optional[Callable[[int, int], None]] = None,
 ) -> str:
     """Download a given file if it's not already present in the local cache.
 
@@ -1099,7 +1102,6 @@ def hf_hub_download(
             revision=revision,
             endpoint=endpoint,
         )
-
         return cached_download(
             url,
             library_name=library_name,
@@ -1113,6 +1115,7 @@ def hf_hub_download(
             token=token,
             local_files_only=local_files_only,
             legacy_cache_layout=legacy_cache_layout,
+            progress_callback=progress_callback,
         )
 
     if cache_dir is None:
@@ -1154,7 +1157,6 @@ def hf_hub_download(
             )
 
             
-
         return _hf_hub_download_to_local_dir(
             # Destination
             local_dir=local_dir,
@@ -1172,6 +1174,7 @@ def hf_hub_download(
             cache_dir=cache_dir,
             force_download=force_download,
             local_files_only=local_files_only,
+            progress_callback=progress_callback,
         )
     else:
         return _hf_hub_download_to_cache_dir(
@@ -1190,6 +1193,7 @@ def hf_hub_download(
             # Additional options
             local_files_only=local_files_only,
             force_download=force_download,
+            progress_callback=progress_callback,
         )
 
 
@@ -1210,6 +1214,7 @@ def _hf_hub_download_to_cache_dir(
     # Additional options
     local_files_only: bool,
     force_download: bool,
+    progress_callback: Optional[Callable[[int, int], None]],
 ) -> str:
     """Download a given file to a cache folder, if not already present.
 
@@ -1329,7 +1334,8 @@ def _hf_hub_download_to_cache_dir(
             expected_size=expected_size,
             filename=filename,
             force_download=force_download,
-            GUI=GUI
+            GUI=GUI,
+            progress_callback=progress_callback
         )
         _create_symlink(blob_path, pointer_path, new_blob=True)
 
@@ -1354,6 +1360,7 @@ def _hf_hub_download_to_local_dir(
     cache_dir: str,
     force_download: bool,
     local_files_only: bool,
+    progress_callback: Optional[Callable[[int, int], None]] = None
 ) -> str:
     """Download a given file to a local folder, if not already present.
 
@@ -1450,7 +1457,8 @@ def _hf_hub_download_to_local_dir(
             expected_size=expected_size,
             filename=filename,
             force_download=force_download,
-            GUI=GUI
+            GUI=GUI,
+            progress_callback=progress_callback
         )
 
     write_download_metadata(local_dir=local_dir, filename=filename, commit_hash=commit_hash, etag=etag)
@@ -1797,7 +1805,8 @@ def _download_to_tmp_and_move(
     expected_size: Optional[int],
     filename: str,
     force_download: bool,
-    GUI: Optional[EventSender] = None  # Add event_sender here
+    GUI: Optional[EventSender] = None,  # Add event_sender here
+    progress_callback: Optional[Callable[[int, int], None]] = None
 ) -> None:
     """Download content from a URL to a destination path.
 
@@ -1839,7 +1848,6 @@ def _download_to_tmp_and_move(
             # Check disk space in both tmp and destination path
             _check_disk_space(expected_size, incomplete_path.parent)
             _check_disk_space(expected_size, destination_path.parent)
-
         http_get(
             url_to_download,
             f,
@@ -1847,7 +1855,8 @@ def _download_to_tmp_and_move(
             resume_size=resume_size,
             headers=headers,
             expected_size=expected_size,
-            GUI=GUI  # Pass event_sender here
+            GUI=GUI,  # Pass event_sender here
+            progress_callback=progress_callback
         )
 
     logger.info(f"Download complete. Moving file to {destination_path}")

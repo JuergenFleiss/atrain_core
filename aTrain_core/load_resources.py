@@ -5,7 +5,10 @@ import json
 import os
 from .custom_snapshot_download import snapshot_download
 from .globals import MODELS_DIR
-from .GUI_integration import EventSender
+from .step_estimator import get_total_model_download_steps
+from .GUI_integration import EventSender, ProgressTracker
+
+
 
 def download_all_models():
     """Downloads all models defined in the model configuration file."""
@@ -22,14 +25,36 @@ def load_model_config_file():
         models_config = json.load(models_config_file)
     return models_config
 
-def get_model(model: str , GUI = EventSender()) -> str:
+def get_model(model: str, GUI: EventSender = None) -> str:
+    if GUI is None:
+        GUI = EventSender()
+
     """Loads a specific model."""
     models_config = load_model_config_file()
     model_info = models_config[model]
     model_path = os.path.join(MODELS_DIR, model)
+
     if not os.path.exists(model_path):
-        snapshot_download(repo_id=model_info["repo_id"], revision=model_info["revision"], local_dir=model_path, local_dir_use_symlinks=False)
+        total_chunks = get_total_model_download_steps(model)
+        tracker = ProgressTracker(total_chunks)
+        
+        # Define a callback function for progress tracking
+        def progress_callback(current_chunk):
+            progress_info = tracker.progress_callback(current_chunk)
+            GUI.progress_info(
+                current=progress_info["current"],
+                total=progress_info["total"]
+            )
+
+        snapshot_download(
+            repo_id=model_info["repo_id"],
+            revision=model_info["revision"],
+            local_dir=model_path,
+            local_dir_use_symlinks=False,
+            progress_callback=progress_callback
+        )
         print(f"Model downloaded to {model_path}")
+
     return model_path
 
 
