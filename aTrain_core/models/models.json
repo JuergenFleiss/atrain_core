@@ -44,18 +44,6 @@
     "revision" : "bcbc5787cacc46911e38af69b7f32adc48512983",
     "type" : "distil",
     "language" : "en"
-},
-"distil-german" : {
-    "repo_id" : "aTrain-core/distil-whisper-large-v3-de-kd",
-    "revision" : "9a422aa51499c15ec8ea17bd401facfc019a0675",
-    "type" : "distil",
-    "language" : "de"
-},
-"distil-french" : {
-    "repo_id" : "aTrain-core/whisper-large-v3-french-distil-dec16",
-    "revision" : "154af5a835ab65686d5f6df93a92037b0a73a3ec",
-    "type" : "distil",
-    "language" : "fr"
 }
 }
 
