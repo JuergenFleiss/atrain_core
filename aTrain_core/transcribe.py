@@ -126,7 +126,6 @@ def transcribe(audio_file, file_id, model, language, speaker_detection, num_spea
     """Transcribes audio file with specified parameters.""" 
     GUI.task_info("preparing transcription")
     print("Preparing transcription")
-    create_directory(file_id)
     write_logfile("Directory created", file_id)
     language = None if language == "auto-detect" else language
     min_speakers = max_speakers = None if num_speakers == "auto-detect" else int(num_speakers)

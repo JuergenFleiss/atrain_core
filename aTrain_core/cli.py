@@ -9,6 +9,7 @@ from datetime import datetime
 import argparse
 import os
 from werkzeug.utils import secure_filename
+from .outputs import write_logfile, create_directory
 
 def link(uri, label=None):
     if label is None: 
@@ -70,6 +71,8 @@ def cli():
         # print(f"FILENAME")
         # print(filename)
 
+        
+
         dir_name = os.path.dirname(args.audiofile)
         file_base_name = os.path.basename(args.audiofile)
 
@@ -81,6 +84,9 @@ def cli():
 
 
         file_id = create_file_id(filename, timestamp)
+        create_directory(file_id)
+        write_logfile(f"Original file name: {args.audiofile}", file_id)
+        write_logfile(f"File ID: {file_id}", file_id)
      
         try:
             check_inputs_transcribe(filename, args.model, args.language, args.device)
