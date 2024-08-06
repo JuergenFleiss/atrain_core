@@ -25,14 +25,14 @@ def load_model_config_file():
         models_config = json.load(models_config_file)
     return models_config
 
-def get_model(model: str, GUI: EventSender = None) -> str:
+def get_model(model: str, GUI: EventSender = None, models_dir = MODELS_DIR) -> str:
     if GUI is None:
         GUI = EventSender()
 
     """Loads a specific model."""
     models_config = load_model_config_file()
     model_info = models_config[model]
-    model_path = os.path.join(MODELS_DIR, model)
+    model_path = os.path.join(models_dir, model)
 
     if not os.path.exists(model_path):
         total_chunks = get_total_model_download_steps(model)
