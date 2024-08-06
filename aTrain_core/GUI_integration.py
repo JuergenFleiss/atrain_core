@@ -54,7 +54,7 @@ class ProgressTracker:
         self.completed_chunks = 0
         self.progress_data = []
 
-    def progress_callback(self):
+    def progress_callback(self, current_chunk):
         self.completed_chunks += 1
         overall_progress = (self.completed_chunks / self.total_chunks) * 100
         progress_info = {"current": self.completed_chunks, "total": self.total_chunks, "percentage": overall_progress}
