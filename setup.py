@@ -29,8 +29,9 @@ setup(
         "ffmpeg-python>=0.2",
         "pandas",
         "pyannote.audio==3.2.0",
-        "huggingface-hub==0.17.3",
-        "numpy==1.26.4"],
+        "huggingface-hub==0.24.5",
+        "numpy==1.26.4",
+        "werkzeug==3.0.3"],
     packages=find_packages(),
     include_package_data=True,
     entry_points={

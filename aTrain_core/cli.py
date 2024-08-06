@@ -7,6 +7,8 @@ from .load_resources import download_all_models, get_model, remove_model
 import traceback
 from datetime import datetime
 import argparse
+import os
+from werkzeug.utils import secure_filename
 
 def link(uri, label=None):
     if label is None: 
@@ -64,11 +66,25 @@ def cli():
     elif args.command == "transcribe":
         print("Running aTrain_core")
         timestamp = datetime.now().strftime(TIMESTAMP_FORMAT)
-        file_id = create_file_id(args.audiofile, timestamp)
+        # filename = secure_filename(args.audiofile)
+        # print(f"FILENAME")
+        # print(filename)
+
+        dir_name = os.path.dirname(args.audiofile)
+        file_base_name = os.path.basename(args.audiofile)
+
+        # Secure the base name (remove unsafe characters)
+        secure_file_base_name = secure_filename(file_base_name)
+
+        # Join the directory path with the secure base name to get the full path
+        filename = os.path.join(dir_name, secure_file_base_name)
+
+
+        file_id = create_file_id(filename, timestamp)
      
         try:
-            check_inputs_transcribe(args.audiofile, args.model, args.language, args.device)
-            transcribe(args.audiofile, file_id, args.model, args.language, args.speaker_detection, args.num_speakers, args.device, args.compute_type, timestamp)
+            check_inputs_transcribe(filename, args.model, args.language, args.device)
+            transcribe(filename, file_id, args.model, args.language, args.speaker_detection, args.num_speakers, args.device, args.compute_type, timestamp)
             print(f"Thank you for using aTrain \nIf you use aTrain in a scientific publication, please cite our paper:\n'Take the aTrain. Introducing an interface for the Accessible Transcription of Interviews'\navailable under: {link('https://www.sciencedirect.com/science/article/pii/S2214635024000066')}")
         except Exception as error:
             delete_transcription(file_id)

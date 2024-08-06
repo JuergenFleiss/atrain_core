@@ -6,6 +6,8 @@ import shutil
 import yaml
 from datetime import datetime
 from .globals import TRANSCRIPT_DIR, METADATA_FILENAME, TIMESTAMP_FORMAT, LOG_FILENAME
+import string
+from werkzeug.utils import secure_filename
 
 def create_directory(file_id):
     """Creates a directory for storing transcription files."""
@@ -18,8 +20,16 @@ def create_file_id(file_path, timestamp):
     """Creates a unique identifier for a file composed of the file path and timestamp."""
       # Extract filename from file_path
     file_base_name = os.path.basename(file_path)
-    short_base_name = file_base_name[0:5] if len(file_base_name) >= 5 else file_base_name
-    file_id = timestamp + " " + short_base_name
+    # Use rsplit to split from the right at most once
+   
+    timestamp = timestamp.replace(" ","-").replace("-","")
+    timestamp = timestamp[:-2]
+    timestamp = timestamp[2:]
+
+
+    short_base_name = file_base_name[0:7] if len(file_base_name) >= 5 else file_base_name
+    file_id = timestamp + "-" + short_base_name
+    print(file_id)
     return file_id
 
 def create_output_files(result, speaker_detection, file_id):
