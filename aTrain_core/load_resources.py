@@ -58,11 +58,12 @@ def get_model(model: str, GUI: EventSender = None, models_dir = MODELS_DIR) -> s
     return model_path
 
 
-def remove_model(model):
-    model_path = os.path.join(MODELS_DIR, model)
+def remove_model(model, models_dir = MODELS_DIR):
+    model_path = os.path.join(models_dir, model)
     print(f"Removing model {model} at path: {model_path}")
     if os.path.exists(model_path):
         shutil.rmtree(model_path)  # This deletes the directory and all its contents
+        
         
 
 
