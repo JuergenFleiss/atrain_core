@@ -67,12 +67,7 @@ def cli():
     elif args.command == "transcribe":
         print("Running aTrain_core")
         timestamp = datetime.now().strftime(TIMESTAMP_FORMAT)
-        # filename = secure_filename(args.audiofile)
-        # print(f"FILENAME")
-        # print(filename)
-
-        
-
+      
         dir_name = os.path.dirname(args.audiofile)
         file_base_name = os.path.basename(args.audiofile)
 
