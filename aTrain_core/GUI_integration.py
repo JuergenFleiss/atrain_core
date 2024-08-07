@@ -44,7 +44,7 @@ class EventSender:
         self.__send(data = progress_data, event="progress")
 
     def finished_info(self):
-        """Send an event to the frontend to inidcate that a process has finished."""
+        """Send an event to the frond to inidcate that a process has finished."""
         self.__send(data="", event="finished")
 
 
