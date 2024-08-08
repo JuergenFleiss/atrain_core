@@ -98,7 +98,7 @@ def cli():
             transcribe(args.audiofile, output_handler, args.model, args.language, args.speaker_detection, args.num_speakers, args.device, args.compute_type, timestamp)
             print(f"Thank you for using aTrain \nIf you use aTrain in a scientific publication, please cite our paper:\n'Take the aTrain. Introducing an interface for the Accessible Transcription of Interviews'\navailable under: {link('https://www.sciencedirect.com/science/article/pii/S2214635024000066')}")
         except Exception as error:
-            delete_transcription(output_handler)
+            delete_transcription(output_handler.file_directory)
             traceback_str = traceback.format_exc()
             error = str(error)
             print(f"The following error has occured: {error}")

@@ -197,21 +197,19 @@ class OutputHandler:
             yaml.dump(metadata,metadata_file)
 
 #Not put into the class on purpose
-def delete_transcription(output_handler):
+def delete_transcription(path):
     """Deletes the transcription files.
 
     Args:
-        output_handler (OutputHandler): Identifier for the file.
+        path (str): Folder of the Transcription.
 
     Returns:
         None
     """
     
-    file_id = "" if output_handler.file_id == "all" else output_handler.file_id
-    print("file_id:"+file_id)
-    directory_name = os.path.join(TRANSCRIPT_DIR,file_id)
-    if os.path.exists(directory_name):    
-        shutil.rmtree(directory_name)
+    path = TRANSCRIPT_DIR if path == "all" else path
+    if os.path.exists(path):    
+        shutil.rmtree(path)
     if not os.path.exists(TRANSCRIPT_DIR):
         os.makedirs(TRANSCRIPT_DIR, exist_ok=True)
 
