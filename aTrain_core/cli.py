@@ -1,6 +1,6 @@
 from .transcribe import transcribe
 from .check_inputs import check_inputs_transcribe
-from .outputs import create_file_id, delete_transcription
+from .outputs import OutputHandler, delete_transcription
 from .transcribe import transcribe
 from .globals import TIMESTAMP_FORMAT
 from .load_resources import download_all_resources, get_model, remove_model
@@ -50,7 +50,7 @@ def cli():
     Note: If an error occurs during transcription, the tool automatically deletes the partially created transcription.
 
     """
-    
+
     parser = argparse.ArgumentParser(prog='aTrain_core', description='A CLI tool for audio transcription with Whisper')
     subparsers = parser.add_subparsers(dest='command', help='Command for aTrain_core to perform.')
 
@@ -74,7 +74,6 @@ def cli():
 
     args = parser.parse_args()
 
-    
     if args.command == "load":
         if args.model == "all":
             print("Downloading all models:")
@@ -92,14 +91,14 @@ def cli():
     elif args.command == "transcribe":
         print("Running aTrain_core")
         timestamp = datetime.now().strftime(TIMESTAMP_FORMAT)
-        file_id = create_file_id(args.audiofile, timestamp)
+        output_handler = OutputHandler.create_output_handler(args.audiofile, timestamp)
      
         try:
             check_inputs_transcribe(args.audiofile, args.model, args.language, args.device)
-            transcribe(args.audiofile, file_id, args.model, args.language, args.speaker_detection, args.num_speakers, args.device, args.compute_type, timestamp)
+            transcribe(args.audiofile, output_handler, args.model, args.language, args.speaker_detection, args.num_speakers, args.device, args.compute_type, timestamp)
             print(f"Thank you for using aTrain \nIf you use aTrain in a scientific publication, please cite our paper:\n'Take the aTrain. Introducing an interface for the Accessible Transcription of Interviews'\navailable under: {link('https://www.sciencedirect.com/science/article/pii/S2214635024000066')}")
         except Exception as error:
-            delete_transcription(file_id)
+            delete_transcription(output_handler)
             traceback_str = traceback.format_exc()
             error = str(error)
             print(f"The following error has occured: {error}")

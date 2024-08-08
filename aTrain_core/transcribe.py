@@ -1,4 +1,4 @@
-from .outputs import create_output_files, named_tuple_to_dict, transform_speakers_results, create_directory, add_processing_time_to_metadata, create_metadata, write_logfile
+from .outputs import OutputHandler, named_tuple_to_dict, transform_speakers_results
 from .globals import SAMPLING_RATE, ATRAIN_DIR
 from .load_resources import get_model
 from faster_whisper.audio import decode_audio
@@ -68,12 +68,12 @@ def transcription_with_progress_bar(transcription_segments, info):
 
     
 
-def transcribe (audio_file, file_id, model, language, speaker_detection, num_speakers, device, compute_type, timestamp):
+def transcribe (audio_file, output_handler, model, language, speaker_detection, num_speakers, device, compute_type, timestamp):
     """Transcribes audio file with specified parameters.
 
     Args:
         audio_file (str): Path to the audio file.
-        file_id (str): Identifier for the file.
+        output_handler (OutputHandler): Identifier for the file.
         model (str): Name of the transcription model.
         language (str): Language for transcription.
         speaker_detection (bool): Whether to perform speaker detection.
@@ -85,21 +85,21 @@ def transcribe (audio_file, file_id, model, language, speaker_detection, num_spe
     Returns:
         None
     """ 
-    create_directory(file_id)
-    write_logfile("Directory created", file_id)
+    output_handler.create_directory()
+    output_handler.write_logfile("Directory created")
     language = None if language == "auto-detect" else language
     min_speakers = max_speakers = None if num_speakers == "auto-detect" else int(num_speakers)
     device = "cuda" if device=="GPU" else "cpu"
 
     audio_array = decode_audio(audio_file, sampling_rate=SAMPLING_RATE)
-    write_logfile("Audio file loaded and decoded", file_id)
+    output_handler.write_logfile("Audio file loaded and decoded")
     audio_duration = int(len(audio_array)/SAMPLING_RATE)
-    write_logfile("Audio duration calculated", file_id)
-    create_metadata(file_id, file_id, audio_duration, model, language, speaker_detection, num_speakers, device, compute_type, timestamp)
-    write_logfile("Metadata created", file_id)
+    output_handler.write_logfile("Audio duration calculated")
+    output_handler.create_metadata(audio_duration, model, language, speaker_detection, num_speakers, device, compute_type, timestamp)
+    output_handler.write_logfile("Metadata created")
 
     model_path = get_model(model)
-    write_logfile("Model loaded", file_id)
+    output_handler.write_logfile("Model loaded")
     transcription_model = WhisperModel(model_path,device,compute_type=compute_type)
 
     models_config_path = str(files("aTrain_core.models").joinpath("models.json"))
@@ -107,48 +107,48 @@ def transcribe (audio_file, file_id, model, language, speaker_detection, num_spe
     models = json.load(f)
 
     if models[model]["type"] == "distil":
-        write_logfile("Transcribing with distil model", file_id)
+        output_handler.write_logfile("Transcribing with distil model")
         transcription_segments, info = transcription_model.transcribe(audio=audio_array,vad_filter=True, beam_size=5, word_timestamps=True,language=language, no_speech_threshold=0.6, condition_on_previous_text=False)
         transcription_segments = transcription_with_progress_bar(transcription_segments, info)
         transcript = {"segments":[named_tuple_to_dict(segment) for segment in transcription_segments]} # wenn man die beiden umdreht also progress bar zuerst damit er schön läuft, dann ist das segments dict leer, sprich es gibt keine transkription
-        write_logfile("Transcription successful", file_id)
+        output_handler.write_logfile("Transcription successful")
 
     else:
-        write_logfile("Transcribing with regular multilingual model", file_id)
+        output_handler.write_logfile("Transcribing with regular multilingual model")
         transcription_segments, info = transcription_model.transcribe(audio=audio_array,vad_filter=True, beam_size=5, word_timestamps=True,language=language,max_new_tokens=128, no_speech_threshold=0.6, condition_on_previous_text=False)
         transcription_segments = transcription_with_progress_bar(transcription_segments, info)
         transcript = {"segments":[named_tuple_to_dict(segment) for segment in transcription_segments]} # wenn man die beiden umdreht also progress bar zuerst damit er schön läuft, dann ist das segments dict leer, sprich es gibt keine transkription
-        write_logfile("Transcription successful", file_id)
+        output_handler.write_logfile("Transcription successful")
 
 
     del transcription_model; gc.collect(); torch.cuda.empty_cache()
     
     if not speaker_detection:
         print(f"Finishing up")
-        create_output_files(transcript, speaker_detection, file_id)
-        write_logfile("No speaker detection. Created output files", file_id)
-        add_processing_time_to_metadata(file_id)
-        write_logfile("Processing time added to metadata", file_id)
+        output_handler.create_output_files(transcript, speaker_detection)
+        output_handler.write_logfile("No speaker detection. Created output files")
+        output_handler.add_processing_time_to_metadata()
+        output_handler.write_logfile("Processing time added to metadata")
 
     if speaker_detection:
         print("Loading speaker detection model")
         model_path = get_model("diarize")
-        write_logfile("Speaker detection model loaded", file_id)
+        output_handler.write_logfile("Speaker detection model loaded")
         diarize_model = CustomPipeline.from_pretrained(model_path).to(torch.device("cpu"))
-        write_logfile("Detecting speakers", file_id)
+        output_handler.write_logfile("Detecting speakers")
         audio_array = { "waveform": torch.from_numpy(audio_array[None, :]), "sample_rate": SAMPLING_RATE}
         with ProgressHook() as hook:
             diarization_segments = diarize_model(audio_array,min_speakers=min_speakers, max_speakers=max_speakers, hook=hook)
         speaker_results = transform_speakers_results(diarization_segments)
-        write_logfile("Transformed diarization segments to speaker results", file_id)
+        output_handler.write_logfile("Transformed diarization segments to speaker results")
         del diarize_model; gc.collect(); torch.cuda.empty_cache()
         transcript_with_speaker = assign_word_speakers(speaker_results,transcript)
-        write_logfile("Assigned speakers to words", file_id)
+        output_handler.write_logfile("Assigned speakers to words")
         print("Finishing up")
-        create_output_files(transcript_with_speaker, speaker_detection, file_id)
-        write_logfile("Created output files", file_id)
-        add_processing_time_to_metadata(file_id)
-        write_logfile("Processing time added to metadata", file_id)
+        output_handler.create_output_files(transcript_with_speaker, speaker_detection)
+        output_handler.write_logfile("Created output files")
+        output_handler.add_processing_time_to_metadata()
+        output_handler.write_logfile("Processing time added to metadata")
 
 def assign_word_speakers(diarize_df, transcript_result, fill_nearest=False):
     """Assigns speakers to transcribed words.
