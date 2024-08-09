@@ -8,9 +8,13 @@ from datetime import datetime
 from .globals import TRANSCRIPT_DIR, METADATA_FILENAME, TIMESTAMP_FORMAT, LOG_FILENAME
 
 class OutputHandler:
-    def __init__(self, file_id):
-        self.file_id = file_id
-        self.file_directory = os.path.join(TRANSCRIPT_DIR, self.file_id)
+    def __init__(self, path, outputtype="folder"):
+        """
+            TODO: Comment
+        """
+        self.path = path
+        self.file_id = os.path.basename(path)
+        self.outputtype = outputtype
 
     def create_directory(self):
         """Creates a directory for storing transcription files.
@@ -21,26 +25,40 @@ class OutputHandler:
         Returns:
             None
         """
-        os.makedirs(TRANSCRIPT_DIR, exist_ok=True)
-        os.makedirs(self.file_directory, exist_ok=True)
-        print(f"Created directory at {self.file_directory}")
+
+        if self.outputtype != "folder":
+            return
+
+        os.makedirs(self.path, exist_ok=True)
+        print(f"Created directory at {self.path}")
 
     @classmethod
-    def create_output_handler(cls, file_path, timestamp):
+    def create_output_handler(cls, file_path, timestamp, outputtype="folder"):
         """Creates a unique identifier for a file composed of the file path and timestamp.
 
         Args:
             file_path (str): Path to the file.
             timestamp (str): Timestamp for the file.
+            TODO: Comment outputtype
 
         Returns:
             OutputHandler: A instance of this class specific for this file
         """
+
+        exts = {
+            "folder": "",
+            "json":".json",
+            "txt":".txt",
+            "txt+timestamp":".txt",
+            "maxqda":".txt",
+            "srt":".srt"
+        }
+
         # Extract filename from file_path
         file_base_name = os.path.basename(file_path)
         short_base_name = file_base_name[0:5] if len(file_base_name) >= 5 else file_base_name
-        file_id = timestamp + " " + short_base_name
-        return cls(file_id)
+        file_id = timestamp + " " + short_base_name + exts[outputtype]
+        return cls(os.path.join(TRANSCRIPT_DIR, file_id), outputtype=outputtype)
 
     def create_output_files(self, result, speaker_detection):
         """Creates output files based on the transcription result.
@@ -67,7 +85,15 @@ class OutputHandler:
         Returns:
             None
         """
-        output_file_text = os.path.join(self.file_directory, "transcription.json")
+
+        output_file_text = None
+        if self.outputtype == "folder":
+            output_file_text = os.path.join(self.path, "transcription.json")
+        elif self.outputtype == "json":
+            output_file_text = self.path
+        else:
+            return
+    
         with open(output_file_text, "w", encoding="utf-8") as json_file:
             json.dump(result, json_file, ensure_ascii=False)
 
@@ -84,11 +110,20 @@ class OutputHandler:
             None
         """
         segments = result["segments"]
-        match maxqda, timestamps:
-            case True, _ :  filename = "transcription_maxqda.txt"
-            case False, True: filename = "transcription_timestamps.txt"
-            case False, False: filename = "transcription.txt"
-        file_path = os.path.join(self.file_directory, filename)
+        file_path = None
+        
+        if self.outputtype == "folder":
+            match maxqda, timestamps:
+                case True, _ :  filename = "transcription_maxqda.txt"
+                case False, True: filename = "transcription_timestamps.txt"
+                case False, False: filename = "transcription.txt"
+        elif  (self.outputtype == "txt" and not maxqda and not timestamps) or \
+              (self.outputtype == "txt+timestamp" and not maxqda and timestamps) or \
+              (self.outputtype == "maxqda" and maxqda):
+            file_path = self.path
+        else:
+            return
+
         with open(file_path, "w",encoding="utf-8") as file:
             headline = f"Transcription for {self.file_id}" + ( "" if maxqda and speaker_detection else "\n") + ("" if speaker_detection else "\n" )
             file.write(headline)
@@ -115,7 +150,14 @@ class OutputHandler:
         """
 
         segments = result["segments"]
-        file_path = os.path.join(self.file_directory, "transcription.srt")
+        file_path = None
+        if self.outputtype == "folder":
+            file_path = os.path.join(self.path, "transcription.srt")
+        elif self.outputtype == "srt":
+            file_path = self.path
+        else:
+            return
+
         with open(file_path,"w", encoding="utf-8") as srt_file:
             for index, segment in enumerate(segments,1):
                 srt_file.write(f"{index}\n")
@@ -143,7 +185,10 @@ class OutputHandler:
             None
         """
 
-        metadata_file_path = os.path.join(self.file_directory,METADATA_FILENAME)
+        if self.outputtype != "folder":
+            return
+
+        metadata_file_path = os.path.join(self.path,METADATA_FILENAME)
         metadata = {
             "file_id" : self.file_id,
             "filename" : self.file_id,
@@ -169,8 +214,11 @@ class OutputHandler:
             None
         """
 
+        if self.outputtype != "folder":
+            return
+
         timestamp = datetime.now().strftime(TIMESTAMP_FORMAT)
-        log_file_path = os.path.join(self.file_directory,LOG_FILENAME)
+        log_file_path = os.path.join(self.path,LOG_FILENAME)
         with open(log_file_path, "a", encoding="utf-8") as f:
             f.write(f"[{timestamp}] ------ {message}\n")
 
@@ -185,7 +233,10 @@ class OutputHandler:
             None
         """
 
-        metadata_file_path = os.path.join(self.file_directory,METADATA_FILENAME)
+        if self.outputtype != "folder":
+            return
+
+        metadata_file_path = os.path.join(self.path,METADATA_FILENAME)
         with open(metadata_file_path, "r", encoding="utf-8") as metadata_file:
             metadata = yaml.safe_load(metadata_file)
         timestamp = metadata["timestamp"]
