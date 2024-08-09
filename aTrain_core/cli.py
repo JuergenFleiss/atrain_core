@@ -1,6 +1,6 @@
 from .transcribe import transcribe
 from .check_inputs import check_inputs_transcribe
-from .outputs import create_file_id, delete_transcription
+from .outputs import OutputHandler, delete_transcription
 from .transcribe import transcribe
 from .globals import TIMESTAMP_FORMAT
 from .load_resources import download_all_resources, get_model, remove_model
@@ -46,11 +46,11 @@ def cli():
           - --num_speakers NUM_SPEAKERS: Number of speakers (default is 'auto-detect').
           - --device DEVICE: Device to use (options are 'CPU' or 'GPU', default is 'CPU').
           - --compute_type COMPUTE_TYPE: Compute type (options are 'float16' or 'int8', default is 'int8').
-
+          - -o OUTPUT_DIRECTORY (Default: ~/Documents/aTrain/transcriptions/{identifying string})
+          - --outputtype TODDO: DOC
     Note: If an error occurs during transcription, the tool automatically deletes the partially created transcription.
-
     """
-    
+
     parser = argparse.ArgumentParser(prog='aTrain_core', description='A CLI tool for audio transcription with Whisper')
     subparsers = parser.add_subparsers(dest='command', help='Command for aTrain_core to perform.')
 
@@ -71,10 +71,11 @@ def cli():
     parser_transcribe.add_argument("--num_speakers", default="auto-detect", help="Number of speakers")
     parser_transcribe.add_argument("--device", default="CPU", choices=["CPU", "GPU"], help="Device to use (CPU/GPU)")
     parser_transcribe.add_argument("--compute_type", default="int8", choices=["float16", "int8"], help="Compute type (float16/int8)")
+    parser_transcribe.add_argument("--outputtype", default="folder", choices=["folder", "json", "txt", "txt+timestamp", "maxqda", "srt"], help="TODO")
+    parser_transcribe.add_argument("-o", "--output", default=None, help="Output Path")
 
     args = parser.parse_args()
 
-    
     if args.command == "load":
         if args.model == "all":
             print("Downloading all models:")
@@ -92,14 +93,18 @@ def cli():
     elif args.command == "transcribe":
         print("Running aTrain_core")
         timestamp = datetime.now().strftime(TIMESTAMP_FORMAT)
-        file_id = create_file_id(args.audiofile, timestamp)
-     
+        print("arg-output:"+str(args.output))
+        if args.output == None:
+            output_handler = OutputHandler.create_output_handler(args.audiofile, timestamp, outputtype=args.outputtype)
+        else:
+            output_handler = OutputHandler(args.output, outputtype=args.outputtype)
+
         try:
             check_inputs_transcribe(args.audiofile, args.model, args.language, args.device)
-            transcribe(args.audiofile, file_id, args.model, args.language, args.speaker_detection, args.num_speakers, args.device, args.compute_type, timestamp)
+            transcribe(args.audiofile, output_handler, args.model, args.language, args.speaker_detection, args.num_speakers, args.device, args.compute_type, timestamp)
             print(f"Thank you for using aTrain \nIf you use aTrain in a scientific publication, please cite our paper:\n'Take the aTrain. Introducing an interface for the Accessible Transcription of Interviews'\navailable under: {link('https://www.sciencedirect.com/science/article/pii/S2214635024000066')}")
         except Exception as error:
-            delete_transcription(file_id)
+            delete_transcription(output_handler.path)
             traceback_str = traceback.format_exc()
             error = str(error)
             print(f"The following error has occured: {error}")
