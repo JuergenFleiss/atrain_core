@@ -1,10 +1,8 @@
 import os
 from pathlib import Path
-from typing import Dict, List, Literal, Optional, Union, Callable
+from typing import Callable, Dict, List, Literal, Optional, Union
 
 import requests
-from tqdm.auto import tqdm as base_tqdm
-from tqdm.contrib.concurrent import thread_map
 from huggingface_hub.constants import (
     DEFAULT_ETAG_TIMEOUT,
     DEFAULT_REVISION,
@@ -12,7 +10,6 @@ from huggingface_hub.constants import (
     HF_HUB_ENABLE_HF_TRANSFER,
     REPO_TYPES,
 )
-from .custom_file_download import REGEX_COMMIT_HASH, hf_hub_download, repo_folder_name
 from huggingface_hub.hf_api import DatasetInfo, HfApi, ModelInfo, SpaceInfo
 from huggingface_hub.utils import (
     GatedRepoError,
@@ -25,7 +22,10 @@ from huggingface_hub.utils import (
     validate_hf_hub_args,
 )
 from huggingface_hub.utils import tqdm as hf_tqdm
+from tqdm.auto import tqdm as base_tqdm
+from tqdm.contrib.concurrent import thread_map
 
+from .custom_file_download import REGEX_COMMIT_HASH, hf_hub_download, repo_folder_name
 
 logger = logging.get_logger(__name__)
 
@@ -166,9 +166,13 @@ def snapshot_download(
     if repo_type is None:
         repo_type = "model"
     if repo_type not in REPO_TYPES:
-        raise ValueError(f"Invalid repo type: {repo_type}. Accepted repo types are: {str(REPO_TYPES)}")
+        raise ValueError(
+            f"Invalid repo type: {repo_type}. Accepted repo types are: {str(REPO_TYPES)}"
+        )
 
-    storage_folder = os.path.join(cache_dir, repo_folder_name(repo_id=repo_id, repo_type=repo_type))
+    storage_folder = os.path.join(
+        cache_dir, repo_folder_name(repo_id=repo_id, repo_type=repo_type)
+    )
 
     repo_info: Union[ModelInfo, DatasetInfo, SpaceInfo, None] = None
     api_call_error: Optional[Exception] = None
@@ -183,7 +187,9 @@ def snapshot_download(
                 endpoint=endpoint,
                 headers=headers,
             )
-            repo_info = api.repo_info(repo_id=repo_id, repo_type=repo_type, revision=revision, token=token)
+            repo_info = api.repo_info(
+                repo_id=repo_id, repo_type=repo_type, revision=revision, token=token
+            )
         except (requests.exceptions.SSLError, requests.exceptions.ProxyError):
             # Actually raise for those subclasses of ConnectionError
             raise
@@ -250,7 +256,9 @@ def snapshot_download(
                 "outgoing traffic has been disabled. To enable repo look-ups and downloads online, set "
                 "'HF_HUB_OFFLINE=0' as environment variable."
             ) from api_call_error
-        elif isinstance(api_call_error, RepositoryNotFoundError) or isinstance(api_call_error, GatedRepoError):
+        elif isinstance(api_call_error, RepositoryNotFoundError) or isinstance(
+            api_call_error, GatedRepoError
+        ):
             # Repo not found => let's raise the actual error
             raise api_call_error
         else:
@@ -263,8 +271,12 @@ def snapshot_download(
 
     # At this stage, internet connection is up and running
     # => let's download the files!
-    assert repo_info.sha is not None, "Repo info returned from server must have a revision sha."
-    assert repo_info.siblings is not None, "Repo info returned from server must have a siblings list."
+    assert (
+        repo_info.sha is not None
+    ), "Repo info returned from server must have a revision sha."
+    assert (
+        repo_info.siblings is not None
+    ), "Repo info returned from server must have a siblings list."
     filtered_repo_files = list(
         filter_repo_objects(
             items=[f.rfilename for f in repo_info.siblings],
@@ -286,7 +298,9 @@ def snapshot_download(
     # we pass the commit_hash to hf_hub_download
     # so no network call happens if we already
     # have the file locally.
-    def _inner_hf_hub_download(repo_file: str, progress_callback: Optional[Callable[[int, int], None]] = None):
+    def _inner_hf_hub_download(
+        repo_file: str, progress_callback: Optional[Callable[[int, int], None]] = None
+    ):
         return hf_hub_download(
             repo_id,
             filename=repo_file,
@@ -306,26 +320,23 @@ def snapshot_download(
             token=token,
             headers=headers,
             progress_callback=progress_callback,
-            
-
         )
-    
-    
 
-    #if HF_HUB_ENABLE_HF_TRANSFER:                                # commented out
+    # if HF_HUB_ENABLE_HF_TRANSFER:                                # commented out
     # when using hf_transfer we don't want extra parallelism
-        # from the one hf_transfer provides
+    # from the one hf_transfer provides
     test = True  # Added for testing purposes
     if test:
         for file in filtered_repo_files:
             print(f"Downloading {file}")
             _inner_hf_hub_download(file, progress_callback=progress_callback)
 
-
     else:
         print("filtered repo files:", filtered_repo_files)
         thread_map(
-            lambda file: _inner_hf_hub_download(file, progress_callback=progress_callback),
+            lambda file: _inner_hf_hub_download(
+                file, progress_callback=progress_callback
+            ),
             filtered_repo_files,
             desc=f"Fetching {len(filtered_repo_files)} files",
             max_workers=max_workers,

@@ -3,9 +3,9 @@ import errno
 import fnmatch
 import inspect
 import json
+import math
 import os
 import re
-import math
 import shutil
 import stat
 import time
@@ -13,11 +13,22 @@ import uuid
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, BinaryIO, Dict, Literal, NoReturn, Optional, Tuple, Union, Callable
+from typing import (
+    Any,
+    BinaryIO,
+    Callable,
+    Dict,
+    Literal,
+    NoReturn,
+    Optional,
+    Tuple,
+    Union,
+)
 from urllib.parse import quote, urlparse
-from .GUI_integration import EventSender
 
 import requests
+
+from .GUI_integration import EventSender
 
 GUI = EventSender()
 
@@ -80,11 +91,12 @@ from huggingface_hub.utils import (
     tqdm,
     validate_hf_hub_args,
 )
-from huggingface_hub.utils._runtime import _PY_VERSION  # noqa: F401 # for backward compatibility
+from huggingface_hub.utils._runtime import (
+    _PY_VERSION,  # noqa: F401 # for backward compatibility
+)
 from huggingface_hub.utils._typing import HTTP_METHOD_T
 from huggingface_hub.utils.insecure_hashlib import sha256
 from huggingface_hub.utils.sha import sha_fileobj
-
 
 logger = logging.get_logger(__name__)
 
@@ -102,6 +114,7 @@ REGEX_COMMIT_HASH = re.compile(r"^[0-9a-f]{40}$")
 REGEX_SHA256 = re.compile(r"^[0-9a-f]{64}$")
 
 _are_symlinks_supported_in_dir: Dict[str, bool] = {}
+
 
 def are_symlinks_supported(cache_dir: Union[str, Path, None] = None) -> bool:
     """Return whether the symlinks are supported on the machine.
@@ -353,7 +366,11 @@ def filename_to_url(
 
 
 def _request_wrapper(
-    method: HTTP_METHOD_T, url: str, *, follow_relative_redirects: bool = False, **params
+    method: HTTP_METHOD_T,
+    url: str,
+    *,
+    follow_relative_redirects: bool = False,
+    **params,
 ) -> requests.Response:
     """Wrapper around requests methods to follow relative redirects if `follow_relative_redirects=True` even when
     `allow_redirection=False`.
@@ -391,7 +408,12 @@ def _request_wrapper(
                 # Highly inspired by `resolve_redirects` from requests library.
                 # See https://github.com/psf/requests/blob/main/requests/sessions.py#L159
                 next_url = urlparse(url)._replace(path=parsed_target.path).geturl()
-                return _request_wrapper(method=method, url=next_url, follow_relative_redirects=True, **params)
+                return _request_wrapper(
+                    method=method,
+                    url=next_url,
+                    follow_relative_redirects=True,
+                    **params,
+                )
         return response
 
     # Perform request and return if status_code is not in the retry list.
@@ -412,16 +434,20 @@ def http_get(
     _nb_retries: int = 5,
     _tqdm_bar: Optional[tqdm] = None,
     GUI: Optional[EventSender] = None,  # Make sure to use Optional and default to None
-    progress_callback: Optional[Callable[[int, int], None]] = None
+    progress_callback: Optional[Callable[[int, int], None]] = None,
 ) -> None:
     """Download a remote file and optionally report progress to the frontend."""
 
     hf_transfer = None
     if HF_HUB_ENABLE_HF_TRANSFER:
         if resume_size != 0:
-            warnings.warn("'hf_transfer' does not support `resume_size`: falling back to regular download method")
+            warnings.warn(
+                "'hf_transfer' does not support `resume_size`: falling back to regular download method"
+            )
         elif proxies is not None:
-            warnings.warn("'hf_transfer' does not support `proxies`: falling back to regular download method")
+            warnings.warn(
+                "'hf_transfer' does not support `proxies`: falling back to regular download method"
+            )
         else:
             try:
                 import hf_transfer  # type: ignore[no-redef]
@@ -438,7 +464,12 @@ def http_get(
         headers["Range"] = "bytes=%d-" % (resume_size,)
 
     r = _request_wrapper(
-        method="GET", url=url, stream=True, proxies=proxies, headers=headers, timeout=HF_HUB_DOWNLOAD_TIMEOUT
+        method="GET",
+        url=url,
+        stream=True,
+        proxies=proxies,
+        headers=headers,
+        timeout=HF_HUB_DOWNLOAD_TIMEOUT,
     )
     hf_raise_for_status(r)
     content_length = r.headers.get("Content-Length")
@@ -498,9 +529,17 @@ def http_get(
 
     except (requests.ConnectionError, requests.ReadTimeout) as e:
         if _nb_retries <= 0:
-            logger.warning("Error while downloading from %s: %s\nMax retries exceeded.", url, str(e))
+            logger.warning(
+                "Error while downloading from %s: %s\nMax retries exceeded.",
+                url,
+                str(e),
+            )
             raise
-        logger.warning("Error while downloading from %s: %s\nTrying to resume download...", url, str(e))
+        logger.warning(
+            "Error while downloading from %s: %s\nTrying to resume download...",
+            url,
+            str(e),
+        )
         time.sleep(1)
         reset_sessions()
         return http_get(
@@ -524,7 +563,6 @@ def http_get(
                 actual_size=temp_file.tell(),
             )
         )
-
 
 
 @validate_hf_hub_args
@@ -668,7 +706,9 @@ def cached_download(
             )
             headers.pop("Accept-Encoding", None)
             hf_raise_for_status(r)
-            etag = r.headers.get(HUGGINGFACE_HEADER_X_LINKED_ETAG) or r.headers.get("ETag")
+            etag = r.headers.get(HUGGINGFACE_HEADER_X_LINKED_ETAG) or r.headers.get(
+                "ETag"
+            )
             # We favor a custom header indicating the etag of the linked resource, and
             # we fallback to the regular etag header.
             # If we don't have any of those, raise an error.
@@ -698,7 +738,9 @@ def cached_download(
             # etag is None
             pass
 
-    filename = force_filename if force_filename is not None else url_to_filename(url, etag)
+    filename = (
+        force_filename if force_filename is not None else url_to_filename(url, etag)
+    )
 
     # get cache path to put the file
     cache_path = os.path.join(cache_dir, filename)
@@ -711,10 +753,16 @@ def cached_download(
         else:
             matching_files = [
                 file
-                for file in fnmatch.filter(os.listdir(cache_dir), filename.split(".")[0] + ".*")
+                for file in fnmatch.filter(
+                    os.listdir(cache_dir), filename.split(".")[0] + ".*"
+                )
                 if not file.endswith(".json") and not file.endswith(".lock")
             ]
-            if len(matching_files) > 0 and not force_download and force_filename is None:
+            if (
+                len(matching_files) > 0
+                and not force_download
+                and force_filename is None
+            ):
                 return os.path.join(cache_dir, matching_files[-1])
             else:
                 # If files cannot be found and local_files_only=True,
@@ -871,7 +919,9 @@ def _create_symlink(src: str, dst: str, new_blob: bool = False) -> None:
             os.symlink(src_rel_or_abs, abs_dst)
             return
         except FileExistsError:
-            if os.path.islink(abs_dst) and os.path.realpath(abs_dst) == os.path.realpath(abs_src):
+            if os.path.islink(abs_dst) and os.path.realpath(
+                abs_dst
+            ) == os.path.realpath(abs_src):
                 # `abs_dst` already exists and is a symlink to the `abs_src` blob. It is most likely that the file has
                 # been cached twice concurrently (exactly between `os.remove` and `os.symlink`). Do nothing.
                 return
@@ -893,7 +943,9 @@ def _create_symlink(src: str, dst: str, new_blob: bool = False) -> None:
         shutil.copyfile(abs_src, abs_dst)
 
 
-def _cache_commit_hash_for_specific_revision(storage_folder: str, revision: str, commit_hash: str) -> None:
+def _cache_commit_hash_for_specific_revision(
+    storage_folder: str, revision: str, commit_hash: str
+) -> None:
     """Cache reference between a revision (tag, branch or truncated commit hash) and the corresponding commit hash.
 
     Does nothing if `revision` is already a proper `commit_hash` or reference is already cached.
@@ -931,7 +983,9 @@ def _check_disk_space(expected_size: int, target_dir: Union[str, Path]) -> None:
     """
 
     target_dir = Path(target_dir)  # format as `Path`
-    for path in [target_dir] + list(target_dir.parents):  # first check target_dir, then each parents one by one
+    for path in [target_dir] + list(
+        target_dir.parents
+    ):  # first check target_dir, then each parents one by one
         try:
             target_dir_free = shutil.disk_usage(path).free
             if target_dir_free < expected_size:
@@ -941,7 +995,9 @@ def _check_disk_space(expected_size: int, target_dir: Union[str, Path]) -> None:
                     f"The target location {target_dir} only has {target_dir_free / 1e6:.2f} MB free disk space."
                 )
             return
-        except OSError:  # raise on anything: file does not exist or space disk cannot be checked
+        except (
+            OSError
+        ):  # raise on anything: file does not exist or space disk cannot be checked
             pass
 
 
@@ -1136,7 +1192,9 @@ def hf_hub_download(
     if repo_type is None:
         repo_type = "model"
     if repo_type not in REPO_TYPES:
-        raise ValueError(f"Invalid repo type: {repo_type}. Accepted repo types are: {str(REPO_TYPES)}")
+        raise ValueError(
+            f"Invalid repo type: {repo_type}. Accepted repo types are: {str(REPO_TYPES)}"
+        )
 
     headers = build_hf_headers(
         token=token,
@@ -1156,7 +1214,6 @@ def hf_hub_download(
                 "For more details, check out https://huggingface.co/docs/huggingface_hub/main/en/guides/download#download-files-to-local-folder."
             )
 
-            
         return _hf_hub_download_to_local_dir(
             # Destination
             local_dir=local_dir,
@@ -1221,7 +1278,9 @@ def _hf_hub_download_to_cache_dir(
     Method should not be called directly. Please use `hf_hub_download` instead.
     """
     locks_dir = os.path.join(cache_dir, ".locks")
-    storage_folder = os.path.join(cache_dir, repo_folder_name(repo_id=repo_id, repo_type=repo_type))
+    storage_folder = os.path.join(
+        cache_dir, repo_folder_name(repo_id=repo_id, repo_type=repo_type)
+    )
 
     # cross platform transcription of filename, to be used as a local file path.
     relative_filename = os.path.join(*filename.split("/"))
@@ -1240,18 +1299,20 @@ def _hf_hub_download_to_cache_dir(
 
     # Try to get metadata (etag, commit_hash, url, size) from the server.
     # If we can't, a HEAD request error is returned.
-    (url_to_download, etag, commit_hash, expected_size, head_call_error) = _get_metadata_or_catch_error(
-        repo_id=repo_id,
-        filename=filename,
-        repo_type=repo_type,
-        revision=revision,
-        endpoint=endpoint,
-        proxies=proxies,
-        etag_timeout=etag_timeout,
-        headers=headers,
-        local_files_only=local_files_only,
-        storage_folder=storage_folder,
-        relative_filename=relative_filename,
+    (url_to_download, etag, commit_hash, expected_size, head_call_error) = (
+        _get_metadata_or_catch_error(
+            repo_id=repo_id,
+            filename=filename,
+            repo_type=repo_type,
+            revision=revision,
+            endpoint=endpoint,
+            proxies=proxies,
+            etag_timeout=etag_timeout,
+            headers=headers,
+            local_files_only=local_files_only,
+            storage_folder=storage_folder,
+            relative_filename=relative_filename,
+        )
     )
 
     # etag can be None for several reasons:
@@ -1278,7 +1339,9 @@ def _hf_hub_download_to_cache_dir(
 
             # Return pointer file if exists
             if commit_hash is not None:
-                pointer_path = _get_pointer_path(storage_folder, commit_hash, relative_filename)
+                pointer_path = _get_pointer_path(
+                    storage_folder, commit_hash, relative_filename
+                )
                 if os.path.exists(pointer_path) and not force_download:
                     return pointer_path
 
@@ -1288,8 +1351,12 @@ def _hf_hub_download_to_cache_dir(
     # From now on, etag, commit_hash, url and size are not None.
     assert etag is not None, "etag must have been retrieved from server"
     assert commit_hash is not None, "commit_hash must have been retrieved from server"
-    assert url_to_download is not None, "file location must have been retrieved from server"
-    assert expected_size is not None, "expected_size must have been retrieved from server"
+    assert (
+        url_to_download is not None
+    ), "file location must have been retrieved from server"
+    assert (
+        expected_size is not None
+    ), "expected_size must have been retrieved from server"
     blob_path = os.path.join(storage_folder, "blobs", etag)
     pointer_path = _get_pointer_path(storage_folder, commit_hash, relative_filename)
 
@@ -1313,7 +1380,11 @@ def _hf_hub_download_to_cache_dir(
 
     # Prevent parallel downloads of the same file with a lock.
     # etag could be duplicated across repos,
-    lock_path = os.path.join(locks_dir, repo_folder_name(repo_id=repo_id, repo_type=repo_type), f"{etag}.lock")
+    lock_path = os.path.join(
+        locks_dir,
+        repo_folder_name(repo_id=repo_id, repo_type=repo_type),
+        f"{etag}.lock",
+    )
 
     # Some Windows versions do not allow for paths longer than 255 characters.
     # In this case, we must specify it is an extended path by using the "\\?\" prefix.
@@ -1335,7 +1406,7 @@ def _hf_hub_download_to_cache_dir(
             filename=filename,
             force_download=force_download,
             GUI=GUI,
-            progress_callback=progress_callback
+            progress_callback=progress_callback,
         )
         _create_symlink(blob_path, pointer_path, new_blob=True)
 
@@ -1360,7 +1431,7 @@ def _hf_hub_download_to_local_dir(
     cache_dir: str,
     force_download: bool,
     local_files_only: bool,
-    progress_callback: Optional[Callable[[int, int], None]] = None
+    progress_callback: Optional[Callable[[int, int], None]] = None,
 ) -> str:
     """Download a given file to a local folder, if not already present.
 
@@ -1381,16 +1452,18 @@ def _hf_hub_download_to_local_dir(
         return str(paths.file_path)
 
     # Local file doesn't exist or commit_hash doesn't match => we need the etag
-    (url_to_download, etag, commit_hash, expected_size, head_call_error) = _get_metadata_or_catch_error(
-        repo_id=repo_id,
-        filename=filename,
-        repo_type=repo_type,
-        revision=revision,
-        endpoint=endpoint,
-        proxies=proxies,
-        etag_timeout=etag_timeout,
-        headers=headers,
-        local_files_only=local_files_only,
+    (url_to_download, etag, commit_hash, expected_size, head_call_error) = (
+        _get_metadata_or_catch_error(
+            repo_id=repo_id,
+            filename=filename,
+            repo_type=repo_type,
+            revision=revision,
+            endpoint=endpoint,
+            proxies=proxies,
+            etag_timeout=etag_timeout,
+            headers=headers,
+            local_files_only=local_files_only,
+        )
     )
 
     if head_call_error is not None:
@@ -1406,14 +1479,23 @@ def _hf_hub_download_to_local_dir(
     # From now on, etag, commit_hash, url and size are not None.
     assert etag is not None, "etag must have been retrieved from server"
     assert commit_hash is not None, "commit_hash must have been retrieved from server"
-    assert url_to_download is not None, "file location must have been retrieved from server"
-    assert expected_size is not None, "expected_size must have been retrieved from server"
+    assert (
+        url_to_download is not None
+    ), "file location must have been retrieved from server"
+    assert (
+        expected_size is not None
+    ), "expected_size must have been retrieved from server"
 
     # Local file exists => check if it's up-to-date
     if not force_download and paths.file_path.is_file():
         # etag matches => update metadata and return file
         if local_metadata is not None and local_metadata.etag == etag:
-            write_download_metadata(local_dir=local_dir, filename=filename, commit_hash=commit_hash, etag=etag)
+            write_download_metadata(
+                local_dir=local_dir,
+                filename=filename,
+                commit_hash=commit_hash,
+                etag=etag,
+            )
             return str(paths.file_path)
 
         # metadata is outdated + etag is a sha256
@@ -1424,7 +1506,12 @@ def _hf_hub_download_to_local_dir(
             with open(paths.file_path, "rb") as f:
                 file_hash = sha_fileobj(f).hex()
             if file_hash == etag:
-                write_download_metadata(local_dir=local_dir, filename=filename, commit_hash=commit_hash, etag=etag)
+                write_download_metadata(
+                    local_dir=local_dir,
+                    filename=filename,
+                    commit_hash=commit_hash,
+                    etag=etag,
+                )
                 return str(paths.file_path)
 
     # Local file doesn't exist or etag isn't a match => retrieve file from remote (or cache)
@@ -1442,7 +1529,12 @@ def _hf_hub_download_to_local_dir(
             with WeakFileLock(paths.lock_path):
                 paths.file_path.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(cached_path, paths.file_path)
-            write_download_metadata(local_dir=local_dir, filename=filename, commit_hash=commit_hash, etag=etag)
+            write_download_metadata(
+                local_dir=local_dir,
+                filename=filename,
+                commit_hash=commit_hash,
+                etag=etag,
+            )
             return str(paths.file_path)
 
     # Otherwise, let's download the file!
@@ -1458,10 +1550,12 @@ def _hf_hub_download_to_local_dir(
             filename=filename,
             force_download=force_download,
             GUI=GUI,
-            progress_callback=progress_callback
+            progress_callback=progress_callback,
         )
 
-    write_download_metadata(local_dir=local_dir, filename=filename, commit_hash=commit_hash, etag=etag)
+    write_download_metadata(
+        local_dir=local_dir, filename=filename, commit_hash=commit_hash, etag=etag
+    )
     return str(paths.file_path)
 
 
@@ -1520,7 +1614,9 @@ def try_to_load_from_cache(
     if repo_type is None:
         repo_type = "model"
     if repo_type not in REPO_TYPES:
-        raise ValueError(f"Invalid repo type: {repo_type}. Accepted repo types are: {str(REPO_TYPES)}")
+        raise ValueError(
+            f"Invalid repo type: {repo_type}. Accepted repo types are: {str(REPO_TYPES)}"
+        )
     if cache_dir is None:
         cache_dir = HF_HUB_CACHE
 
@@ -1605,7 +1701,9 @@ def get_hf_file_metadata(
         user_agent=user_agent,
         headers=headers,
     )
-    headers["Accept-Encoding"] = "identity"  # prevent any compression => we want to know the real size of the file
+    headers["Accept-Encoding"] = (
+        "identity"  # prevent any compression => we want to know the real size of the file
+    )
 
     # Retrieve metadata
     r = _request_wrapper(
@@ -1624,12 +1722,17 @@ def get_hf_file_metadata(
         commit_hash=r.headers.get(HUGGINGFACE_HEADER_X_REPO_COMMIT),
         # We favor a custom header indicating the etag of the linked resource, and
         # we fallback to the regular etag header.
-        etag=_normalize_etag(r.headers.get(HUGGINGFACE_HEADER_X_LINKED_ETAG) or r.headers.get("ETag")),
+        etag=_normalize_etag(
+            r.headers.get(HUGGINGFACE_HEADER_X_LINKED_ETAG) or r.headers.get("ETag")
+        ),
         # Either from response headers (if redirected) or defaults to request url
         # Do not use directly `url`, as `_request_wrapper` might have followed relative
         # redirects.
         location=r.headers.get("Location") or r.request.url,  # type: ignore
-        size=_int_or_none(r.headers.get(HUGGINGFACE_HEADER_X_LINKED_SIZE) or r.headers.get("Content-Length")),
+        size=_int_or_none(
+            r.headers.get(HUGGINGFACE_HEADER_X_LINKED_SIZE)
+            or r.headers.get("Content-Length")
+        ),
     )
 
 
@@ -1673,7 +1776,9 @@ def _get_metadata_or_catch_error(
             ),
         )
 
-    url = url = hf_hub_url(repo_id, filename, repo_type=repo_type, revision=revision, endpoint=endpoint)
+    url = url = hf_hub_url(
+        repo_id, filename, repo_type=repo_type, revision=revision, endpoint=endpoint
+    )
     url_to_download: str = url
     etag: Optional[str] = None
     commit_hash: Optional[str] = None
@@ -1685,16 +1790,27 @@ def _get_metadata_or_catch_error(
     if not local_files_only:
         try:
             try:
-                metadata = get_hf_file_metadata(url=url, proxies=proxies, timeout=etag_timeout, headers=headers)
+                metadata = get_hf_file_metadata(
+                    url=url, proxies=proxies, timeout=etag_timeout, headers=headers
+                )
             except EntryNotFoundError as http_error:
                 if storage_folder is not None and relative_filename is not None:
                     # Cache the non-existence of the file
-                    commit_hash = http_error.response.headers.get(HUGGINGFACE_HEADER_X_REPO_COMMIT)
+                    commit_hash = http_error.response.headers.get(
+                        HUGGINGFACE_HEADER_X_REPO_COMMIT
+                    )
                     if commit_hash is not None:
-                        no_exist_file_path = Path(storage_folder) / ".no_exist" / commit_hash / relative_filename
+                        no_exist_file_path = (
+                            Path(storage_folder)
+                            / ".no_exist"
+                            / commit_hash
+                            / relative_filename
+                        )
                         no_exist_file_path.parent.mkdir(parents=True, exist_ok=True)
                         no_exist_file_path.touch()
-                        _cache_commit_hash_for_specific_revision(storage_folder, revision, commit_hash)
+                        _cache_commit_hash_for_specific_revision(
+                            storage_folder, revision, commit_hash
+                        )
                 raise
 
             # Commit hash must exist
@@ -1717,7 +1833,9 @@ def _get_metadata_or_catch_error(
             # Size must exist
             expected_size = metadata.size
             if expected_size is None:
-                raise FileMetadataError("Distant resource does not have a Content-Length.")
+                raise FileMetadataError(
+                    "Distant resource does not have a Content-Length."
+                )
 
             # In case of a redirect, save an extra redirect on the request.get call,
             # and ensure we download the exact atomic version even if it changed
@@ -1766,17 +1884,25 @@ def _get_metadata_or_catch_error(
     return (url_to_download, etag, commit_hash, expected_size, head_error_call)  # type: ignore [return-value]
 
 
-def _raise_on_head_call_error(head_call_error: Exception, force_download: bool, local_files_only: bool) -> NoReturn:
+def _raise_on_head_call_error(
+    head_call_error: Exception, force_download: bool, local_files_only: bool
+) -> NoReturn:
     """Raise an appropriate error when the HEAD call failed and we cannot locate a local file."""
 
     # No head call => we cannot force download.
     if force_download:
         if local_files_only:
-            raise ValueError("Cannot pass 'force_download=True' and 'local_files_only=True' at the same time.")
+            raise ValueError(
+                "Cannot pass 'force_download=True' and 'local_files_only=True' at the same time."
+            )
         elif isinstance(head_call_error, OfflineModeIsEnabled):
-            raise ValueError("Cannot pass 'force_download=True' when offline mode is enabled.") from head_call_error
+            raise ValueError(
+                "Cannot pass 'force_download=True' when offline mode is enabled."
+            ) from head_call_error
         else:
-            raise ValueError("Force download failed due to the above error.") from head_call_error
+            raise ValueError(
+                "Force download failed due to the above error."
+            ) from head_call_error
 
     # No head call + couldn't find an appropriate file on disk => raise an error.
     if local_files_only:
@@ -1784,7 +1910,9 @@ def _raise_on_head_call_error(head_call_error: Exception, force_download: bool, 
             "Cannot find the requested files in the disk cache and outgoing traffic has been disabled. To enable"
             " hf.co look-ups and downloads online, set 'local_files_only' to False."
         )
-    elif isinstance(head_call_error, RepositoryNotFoundError) or isinstance(head_call_error, GatedRepoError):
+    elif isinstance(head_call_error, RepositoryNotFoundError) or isinstance(
+        head_call_error, GatedRepoError
+    ):
         # Repo not found or gated => let's raise the actual error
         raise head_call_error
     else:
@@ -1806,7 +1934,7 @@ def _download_to_tmp_and_move(
     filename: str,
     force_download: bool,
     GUI: Optional[EventSender] = None,  # Add event_sender here
-    progress_callback: Optional[Callable[[int, int], None]] = None
+    progress_callback: Optional[Callable[[int, int], None]] = None,
 ) -> None:
     """Download content from a URL to a destination path.
 
@@ -1825,7 +1953,9 @@ def _download_to_tmp_and_move(
         # Do nothing if already exists (except if force_download=True)
         return
 
-    if incomplete_path.exists() and (force_download or (HF_HUB_ENABLE_HF_TRANSFER and not proxies)):
+    if incomplete_path.exists() and (
+        force_download or (HF_HUB_ENABLE_HF_TRANSFER and not proxies)
+    ):
         # By default, we will try to resume the download if possible.
         # However, if the user has set `force_download=True` or if `hf_transfer` is enabled, then we should
         # not resume the download => delete the incomplete file.
@@ -1856,12 +1986,11 @@ def _download_to_tmp_and_move(
             headers=headers,
             expected_size=expected_size,
             GUI=GUI,  # Pass event_sender here
-            progress_callback=progress_callback
+            progress_callback=progress_callback,
         )
 
     logger.info(f"Download complete. Moving file to {destination_path}")
     _chmod_and_move(incomplete_path, destination_path)
-
 
 
 def _int_or_none(value: Optional[str]) -> Optional[int]:
@@ -1896,11 +2025,16 @@ def _chmod_and_move(src: Path, dst: Path) -> None:
     shutil.move(str(src), str(dst))
 
 
-def _get_pointer_path(storage_folder: str, revision: str, relative_filename: str) -> str:
+def _get_pointer_path(
+    storage_folder: str, revision: str, relative_filename: str
+) -> str:
     # Using `os.path.abspath` instead of `Path.resolve()` to avoid resolving symlinks
     snapshot_path = os.path.join(storage_folder, "snapshots")
     pointer_path = os.path.join(snapshot_path, revision, relative_filename)
-    if Path(os.path.abspath(snapshot_path)) not in Path(os.path.abspath(pointer_path)).parents:
+    if (
+        Path(os.path.abspath(snapshot_path))
+        not in Path(os.path.abspath(pointer_path)).parents
+    ):
         raise ValueError(
             "Invalid pointer path: cannot create pointer path in snapshot folder if"
             f" `storage_folder='{storage_folder}'`, `revision='{revision}'` and"
