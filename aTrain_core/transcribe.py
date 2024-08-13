@@ -7,7 +7,6 @@ from typing import Any, Iterable, Mapping, Optional, Text
 
 import ctranslate2
 import numpy as np
-import torch
 import yaml
 from faster_whisper import WhisperModel
 from faster_whisper.audio import decode_audio
@@ -161,6 +160,8 @@ def transcribe(
     GUI: EventSender = EventSender(),
 ):
     """Transcribes audio file with specified parameters."""
+    import torch  # import inside function for faster startup times in GUI app
+
     GUI.task_info("preparing transcription")
     print("Preparing transcription")
     write_logfile("Directory created", file_id)
