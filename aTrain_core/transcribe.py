@@ -1,4 +1,4 @@
-import gc  # Import inside the function to speed up the startup time of the destkop app.
+import gc
 import json
 import math
 import os
