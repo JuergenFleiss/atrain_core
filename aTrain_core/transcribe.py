@@ -157,6 +157,7 @@ def transcribe(
     device,
     compute_type,
     timestamp,
+    original_audio_filename,
     GUI: EventSender = EventSender(),
 ):
     """Transcribes audio file with specified parameters."""
@@ -186,6 +187,7 @@ def transcribe(
         device,
         compute_type,
         timestamp,
+        original_audio_filename,
     )
     write_logfile("Metadata created", file_id)
 

@@ -113,8 +113,9 @@ def cli():
 
         file_id = create_file_id(filename, timestamp)
         create_directory(file_id)
-        write_logfile(f"Original file name: {args.audiofile}", file_id)
-        write_logfile(f"File ID: {file_id}", file_id)
+
+        original_file_name = args.audiofile
+        write_logfile(f"File ID created: {file_id}", file_id)
 
         try:
             check_inputs_transcribe(filename, args.model, args.language, args.device)
@@ -128,6 +129,7 @@ def cli():
                 args.device,
                 args.compute_type,
                 timestamp,
+                original_file_name,
             )
             print(
                 f"Thank you for using aTrain \nIf you use aTrain in a scientific publication, please cite our paper:\n'Take the aTrain. Introducing an interface for the Accessible Transcription of Interviews'\navailable under: {link('https://www.sciencedirect.com/science/article/pii/S2214635024000066')}"

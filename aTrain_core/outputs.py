@@ -156,6 +156,7 @@ def create_metadata(
     device,
     compute_type,
     timestamp,
+    original_audio_filename,
 ):
     """Creates metadata file for the transcription."""
 
@@ -171,6 +172,7 @@ def create_metadata(
         "device": device,
         "compute_type": compute_type,
         "timestamp": timestamp,
+        "path_to_audio_file": original_audio_filename,
     }
     with open(metadata_file_path, "w", encoding="utf-8") as metadata_file:
         yaml.dump(metadata, metadata_file)
