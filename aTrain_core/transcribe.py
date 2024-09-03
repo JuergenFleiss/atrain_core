@@ -158,7 +158,7 @@ def transcribe(
     timestamp,
     original_audio_filename,
     GUI: EventSender = EventSender(),
-    required_models_dir_interactive=None,
+    required_models_dir=MODELS_DIR,
 ):
     """Transcribes audio file with specified parameters."""
     import torch  # import inside function for faster startup times in GUI app
@@ -191,7 +191,7 @@ def transcribe(
     )
     write_logfile("Metadata created", file_id)
 
-    model_path = get_model(model, required_models_dir_interactive)
+    model_path = get_model(model, required_models_dir=required_models_dir)
     write_logfile("Model loaded", file_id)
     transcription_model = CountingWhisperModel(
         model_path, device, compute_type=compute_type

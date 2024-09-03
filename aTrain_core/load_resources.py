@@ -32,7 +32,7 @@ def get_model(
     model: str,
     GUI: EventSender = None,
     models_dir=MODELS_DIR,
-    required_models_dir_interactive=None,
+    required_models_dir=MODELS_DIR,
 ) -> str:
     if GUI is None:
         GUI = EventSender()
@@ -40,8 +40,8 @@ def get_model(
     """Loads a specific model."""
     models_config = load_model_config_file()
     model_info = models_config[model]
-    if required_models_dir_interactive is not None and model in REQUIRED_MODELS:
-        models_dir = required_models_dir_interactive
+    if model in REQUIRED_MODELS:
+        models_dir = required_models_dir
     model_path = os.path.join(models_dir, model)
 
     if not os.path.exists(model_path):
