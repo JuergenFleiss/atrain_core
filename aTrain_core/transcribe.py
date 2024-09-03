@@ -257,7 +257,7 @@ def transcribe(
 
     if speaker_detection:
         print("Loading speaker detection model")
-        model_path = get_model("diarize")
+        model_path = get_model("diarize", required_models_dir=required_models_dir)
         write_logfile("Speaker detection model loaded", file_id)
         diarize_model = CustomPipeline.from_pretrained(model_path).to(
             torch.device("cpu")
