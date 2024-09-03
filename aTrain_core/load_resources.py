@@ -6,7 +6,7 @@ import shutil
 from importlib.resources import files
 
 from .custom_snapshot_download import snapshot_download
-from .globals import MODELS_DIR
+from .globals import MODELS_DIR, REQUIRED_MODELS
 from .GUI_integration import EventSender, ProgressTracker
 from .step_estimator import get_total_model_download_steps
 
@@ -28,13 +28,20 @@ def load_model_config_file():
     return models_config
 
 
-def get_model(model: str, GUI: EventSender = None, models_dir=MODELS_DIR) -> str:
+def get_model(
+    model: str,
+    GUI: EventSender = None,
+    models_dir=MODELS_DIR,
+    required_models_dir_interactive=None,
+) -> str:
     if GUI is None:
         GUI = EventSender()
 
     """Loads a specific model."""
     models_config = load_model_config_file()
     model_info = models_config[model]
+    if required_models_dir_interactive is not None and model in REQUIRED_MODELS:
+        models_dir = required_models_dir_interactive
     model_path = os.path.join(models_dir, model)
 
     if not os.path.exists(model_path):

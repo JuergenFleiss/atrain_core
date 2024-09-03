@@ -9,3 +9,4 @@ METADATA_FILENAME = "metadata.txt"
 LOG_FILENAME = "log.txt"
 TIMESTAMP_FORMAT = "%Y-%m-%d %H-%M-%S"
 SAMPLING_RATE = 16000
+REQUIRED_MODELS = ["diarize", "large-v3"]
