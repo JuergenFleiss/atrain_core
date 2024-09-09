@@ -38,7 +38,13 @@ dependencies = [
     "onnxruntime==1.18.1",
     "torch==2.2.0+cu121; sys_platform == 'win32'",
     "torch==2.2.0+cu121; sys_platform == 'linux'",
-    "torch==2.2.0; sys_platform == 'darwin'"
+    "torch==2.2.0; sys_platform == 'darwin'",
+    "pyqt5"; sys_platform == 'linux'",
+    "pyqtwebengine"; sys_platform == 'linux'",
+    "pywebview"; sys_platform == 'linux'",
+    "pywebview[qt]"; sys_platform == 'linux'",
+    "pycairo"; sys_platform == 'linux'",
+    "PyGObject"; sys_platform == 'linux'"
 ]
 
 [tool.setuptools.packages.find]
