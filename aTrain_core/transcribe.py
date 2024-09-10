@@ -12,7 +12,7 @@ from pyannote.audio import Pipeline
 from pyannote.audio.pipelines.utils.hook import ProgressHook
 from pyannote.core.utils.helper import get_class_by_name
 from tqdm import tqdm
-
+from .step_estimator import calculate_steps
 from .globals import MODELS_DIR, SAMPLING_RATE
 from .GUI_integration import EventSender
 from .load_resources import get_model
@@ -193,7 +193,7 @@ def transcribe(
         write_logfile("Processing time added to metadata", file_id)
 
     if speaker_detection:
-        total_steps = len(transcription_segments)
+        total_steps = calculate_steps(audio_duration)
         current_step = 0
         print("Loading speaker detection model")
         model_path = get_model("diarize", required_models_dir=required_models_dir)

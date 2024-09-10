@@ -14,31 +14,22 @@ def load_model_config_file():
     return models_config
 
 
-def calculate_steps(speaker_detection, nr_segments, audio_duration):
+def calculate_steps(audio_duration):
     """Calculates the total number of steps for the transcription process."""
+    # Predictions
+    segmentation_prediction = predict_segmentation_steps(audio_duration)
+    embedding_prediction = predict_embedding_steps(audio_duration)
+    segmentation_prediction = segmentation_prediction / 32
+    # account for one extra process when not divisible by 32
+    if isinstance(segmentation_prediction / 32, int):
+        segmentation_prediction = segmentation_prediction
+    else:
+        segmentation_prediction = math.ceil(segmentation_prediction + 1)
 
-    total_steps = 0
-    if not speaker_detection:
-        total_steps = nr_segments
-        print(f"Total steps without diarization: {total_steps}")
-        return total_steps
-
-    elif speaker_detection:
-        total_steps += nr_segments
-        # Predictions
-        segmentation_prediction = predict_segmentation_steps(audio_duration)
-        embedding_prediction = predict_embedding_steps(audio_duration)
-        segmentation_prediction = segmentation_prediction / 32
-        # account for one extra process when not divisible by 32
-        if isinstance(segmentation_prediction / 32, int):
-            segmentation_prediction = segmentation_prediction
-        else:
-            segmentation_prediction = math.ceil(segmentation_prediction + 1)
-
-        total_steps += (
-            segmentation_prediction + embedding_prediction + 2
-        )  # speaker_counting & discrete_diarization are one step each
-        return total_steps
+    total_steps = (
+        segmentation_prediction + embedding_prediction + 2
+    )  # speaker_counting & discrete_diarization are one step each
+    return total_steps
 
 
 def predict_segmentation_steps(length):
