@@ -156,30 +156,21 @@ def transcribe(
     f = open(models_config_path, "r")
     models = json.load(f)
 
-    if models[model]["type"] == "distil":
-        write_logfile("Transcribing with distil model", file_id)
-        transcription_segments, info = transcription_model.transcribe(
-            audio=audio_array,
-            vad_filter=True,
-            beam_size=5,
-            word_timestamps=True,
-            language=language,
-            no_speech_threshold=0.6,
-            condition_on_previous_text=False,
-        )
+    model_type = models[model]["type"]
+    max_new_tokens = None if model_type == "distil" else 128
 
-    else:
-        write_logfile("Transcribing with regular multilingual model", file_id)
-        transcription_segments, info = transcription_model.transcribe(
-            audio=audio_array,
-            vad_filter=True,
-            beam_size=5,
-            word_timestamps=True,
-            language=language,
-            max_new_tokens=128,
-            no_speech_threshold=0.6,
-            condition_on_previous_text=False,
-        )
+    write_logfile(f"Transcribing with {model_type} model.", file_id)
+
+    transcription_segments, info = transcription_model.transcribe(
+        audio=audio_array,
+        vad_filter=True,
+        beam_size=5,
+        word_timestamps=True,
+        language=language,
+        max_new_tokens=max_new_tokens,
+        no_speech_threshold=0.6,
+        condition_on_previous_text=False,
+    )
 
     transcription_segments = transcription_with_progress_bar(
         transcription_segments, info, GUI
