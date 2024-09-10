@@ -115,7 +115,7 @@ def transcribe(
     timestamp,
     original_audio_filename,
     GUI: EventSender = EventSender(),
-    required_models_dir=MODELS_DIR,
+    required_models_dir=None,
 ):
     """Transcribes audio file with specified parameters."""
     import torch  # import inside function for faster startup times in GUI app
