@@ -178,7 +178,6 @@ def transcribe(
     transcript = {
         "segments": [named_tuple_to_dict(segment) for segment in transcription_segments]
     }  # wenn man die beiden umdreht also progress bar zuerst damit er schön läuft, dann ist das segments dict leer, sprich es gibt keine transkription
-    current_step = transcription_model.total_segments
     write_logfile("Transcription successful", file_id)
 
     del transcription_model
@@ -195,6 +194,7 @@ def transcribe(
 
     if speaker_detection:
         total_steps = len(transcription_segments)
+        current_step = 0
         print("Loading speaker detection model")
         model_path = get_model("diarize", required_models_dir=required_models_dir)
         write_logfile("Speaker detection model loaded", file_id)
