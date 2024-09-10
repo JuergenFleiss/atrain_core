@@ -1,17 +1,13 @@
 import gc
 import json
-import math
 import os
 from importlib.resources import files
-from typing import Any, Iterable, Mapping, Optional, Text
+from typing import Any, Mapping, Optional, Text
 
-import ctranslate2
 import numpy as np
 import yaml
 from faster_whisper import WhisperModel
 from faster_whisper.audio import decode_audio
-from faster_whisper.tokenizer import Tokenizer
-from faster_whisper.transcribe import Segment, TranscriptionOptions
 from pyannote.audio import Pipeline
 from pyannote.audio.pipelines.utils.hook import ProgressHook
 from pyannote.core.utils.helper import get_class_by_name
@@ -28,7 +24,6 @@ from .outputs import (
     transform_speakers_results,
     write_logfile,
 )
-from .step_estimator import calculate_steps
 
 
 class CustomPipeline(Pipeline):
@@ -200,7 +195,7 @@ def transcribe(
     torch.cuda.empty_cache()
 
     if not speaker_detection:
-        print(f"Finishing up")
+        print("Finishing up")
         GUI.task_info("Creating output files")
         create_output_files(transcript, speaker_detection, file_id)
         write_logfile("No speaker detection. Created output files", file_id)
