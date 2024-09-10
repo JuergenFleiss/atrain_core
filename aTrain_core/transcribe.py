@@ -115,7 +115,7 @@ def _prepare_metadata_creation(language, num_speakers, device, file_id, audio_fi
         audio_array = decode_audio(audio_file, sampling_rate=SAMPLING_RATE)
     except Exception as e:
         write_logfile(f"File has no audio: {e}", file_id)
-        raise Exception(f"File has no audio: {e}")
+        raise Exception("Attention: Your file has no audio:")
     write_logfile("Audio file loaded and decoded", file_id)
     audio_duration = int(len(audio_array) / SAMPLING_RATE)
     write_logfile("Audio duration calculated", file_id)
