@@ -3,6 +3,7 @@ import os
 import platform
 import string
 from importlib.resources import files
+import ffmpeg
 
 from werkzeug.utils import secure_filename
 
@@ -13,11 +14,26 @@ def check_inputs_transcribe(file, model, language, device):
     file_correct = check_file(file)
     model_correct = check_model(model, language)
     language_correct = check_language(language)
+    audio_correct = check_audio(file)
 
-    if not file_correct and model_correct and language_correct:
+    if not file_correct and model_correct and language_correct and audio_correct:
         raise ValueError(
             "Incorrect input. Please check the file, model and language inputs."
         )
+
+
+def check_audio(file):
+    # Run ffprobe on the specified file and return a JSON representation of the output.
+    # https://kkroening.github.io/ffmpeg-python/
+    # Use select_streams='a' for getting only audio streams information
+    p = ffmpeg.probe(file, select_streams="a")
+
+    # If p['streams'] is not empty, clip has an audio stream
+    if p["streams"]:
+        print("File has audio!")
+        return True
+    else:
+        raise ValueError("File has no audio stream.")
 
 
 def check_file(file):
