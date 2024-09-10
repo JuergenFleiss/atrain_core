@@ -87,9 +87,7 @@ class CustomProgressHook(ProgressHook):
                 self.GUI.progress_info(self.completed_steps, self.total_steps)
 
 
-def transcription_with_progress_bar(
-    transcription_segments, info, GUI: EventSender, completed_steps, total_steps
-):
+def transcription_with_progress_bar(transcription_segments, info, GUI: EventSender):
     """Transcribes audio segments with progress bar."""
     total_duration = round(info.duration, 2)
     timestamps = 0.0  # to get the current segments
@@ -100,50 +98,14 @@ def transcription_with_progress_bar(
     ) as pbar:
         GUI.task_info("transcribing with Whisper model")
         for nr, segment in enumerate(transcription_segments):
-            completed_steps += 1
-            print(f"Progress: {completed_steps}/{total_steps}")
-            GUI.progress_info(completed_steps, total_steps)
-
             transcription_segments_new.append(segment)
+            GUI.progress_info(segment.end, total_duration)
             pbar.update(segment.end - timestamps)
             timestamps = segment.end
         if timestamps < info.duration:  # silence at the end of the audio
             pbar.update(info.duration - timestamps)
 
     return transcription_segments_new
-
-
-class CountingWhisperModel(WhisperModel):
-    """A subclass of WhisperModel that counts the total number of generated segments during transcription."""
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.total_segments = 0
-
-    def generate_segments(
-        self,
-        features: np.ndarray,
-        tokenizer: Tokenizer,
-        options: TranscriptionOptions,
-        encoder_output: Optional[ctranslate2.StorageView] = None,
-    ) -> Iterable[Segment]:
-        # Reset total segments counter
-        self.total_segments = 0
-
-        # Generating segments for the counter
-        segments = super().generate_segments(
-            features, tokenizer, options, encoder_output
-        )
-
-        # Count segments
-        self.total_segments = sum(1 for _ in segments)
-
-        # Generating segments again for further processing
-        segments = super().generate_segments(
-            features, tokenizer, options, encoder_output
-        )
-
-        return segments
 
 
 def transcribe(
@@ -193,9 +155,7 @@ def transcribe(
 
     model_path = get_model(model, required_models_dir=required_models_dir)
     write_logfile("Model loaded", file_id)
-    transcription_model = CountingWhisperModel(
-        model_path, device, compute_type=compute_type
-    )
+    transcription_model = WhisperModel(model_path, device, compute_type=compute_type)
 
     models_config_path = str(files("aTrain_core.models").joinpath("models.json"))
     f = open(models_config_path, "r")
@@ -226,16 +186,8 @@ def transcribe(
             condition_on_previous_text=False,
         )
 
-    current_step = 0
-    total_steps = math.ceil(
-        calculate_steps(
-            speaker_detection, transcription_model.total_segments, audio_duration
-        )
-    )
-    GUI.progress_info(current_step, total_steps)
-
     transcription_segments = transcription_with_progress_bar(
-        transcription_segments, info, GUI, current_step, total_steps
+        transcription_segments, info, GUI
     )
     transcript = {
         "segments": [named_tuple_to_dict(segment) for segment in transcription_segments]
@@ -256,6 +208,7 @@ def transcribe(
         write_logfile("Processing time added to metadata", file_id)
 
     if speaker_detection:
+        total_steps = len(transcription_segments)
         print("Loading speaker detection model")
         model_path = get_model("diarize", required_models_dir=required_models_dir)
         write_logfile("Speaker detection model loaded", file_id)
