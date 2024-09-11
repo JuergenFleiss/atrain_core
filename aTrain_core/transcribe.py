@@ -68,7 +68,9 @@ class CustomProgressHook(ProgressHook):
     ):
         super().__call__(step_name, step_artifact, file, total, completed)
 
-        self.GUI.task_info(f"{self.step_name}")
+        # self.GUI.task_info(f"{self.step_name}")    # names of sub-steps within speaker detection
+        self.GUI.task_info("Speaker detection")
+
         if (
             self.step_name == "speaker_counting"
             or self.step_name == "discrete_diarization"
