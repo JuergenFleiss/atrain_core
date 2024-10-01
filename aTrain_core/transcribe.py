@@ -69,7 +69,7 @@ class CustomProgressHook(ProgressHook):
         super().__call__(step_name, step_artifact, file, total, completed)
 
         # self.GUI.task_info(f"{self.step_name}")    # names of sub-steps within speaker detection
-        self.GUI.task_info("Speaker detection")
+        self.GUI.task_info("Detect Speakers")
 
         if (
             self.step_name == "speaker_counting"
@@ -93,7 +93,7 @@ def transcription_with_progress_bar(transcription_segments, info, GUI: EventSend
     with tqdm(
         total=total_duration, unit=" audio seconds", desc="Transcribing with Whisper"
     ) as pbar:
-        GUI.task_info("transcribing with Whisper model")
+        GUI.task_info("Transcribe")
         for nr, segment in enumerate(transcription_segments):
             transcription_segments_new.append(segment)
             GUI.progress_info(segment.end, total_duration)
@@ -273,7 +273,7 @@ def _finish_transcription_create_output_files(
     transcript, speaker_detection, file_id, GUI
 ):
     """Create output files after transcription."""
-    GUI.task_info("Creating output files")
+    GUI.task_info("Finish")
     create_output_files(transcript, speaker_detection, file_id)
     write_logfile("No speaker detection. Created output files", file_id)
     add_processing_time_to_metadata(file_id)
@@ -297,7 +297,7 @@ def transcribe(
     """Transcribes audio file with specified parameters."""
     # import inside function for faster startup times in GUI app
 
-    GUI.task_info("Preparing transcription")
+    GUI.task_info("Prepare")
     write_logfile("Directory created", file_id)
 
     audio_array, audio_duration, device, min_speakers, max_speakers, language = (
