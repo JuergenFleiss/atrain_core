@@ -105,7 +105,7 @@ def transcription_with_progress_bar(transcription_segments, info, GUI: EventSend
     return transcription_segments_new
 
 
-def _prepare_metadata_creation(language, num_speakers, device, file_id, audio_file):
+def prepare_metadata_creation(language, num_speakers, device, file_id, audio_file):
     """Preprocessing steps for the metadata creation and further use."""
     language = None if language == "auto-detect" else language
     min_speakers = max_speakers = (
@@ -301,7 +301,7 @@ def transcribe(
     write_logfile("Directory created", file_id)
 
     audio_array, audio_duration, device, min_speakers, max_speakers, language = (
-        _prepare_metadata_creation(language, num_speakers, device, file_id, audio_file)
+        prepare_metadata_creation(language, num_speakers, device, file_id, audio_file)
     )
     create_metadata(
         file_id,
