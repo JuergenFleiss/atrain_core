@@ -1,11 +1,7 @@
 import json
 import os
-import platform
-import string
 from importlib.resources import files
 # import ffmpeg
-
-from werkzeug.utils import secure_filename
 
 
 def check_inputs_transcribe(file, model, language, device):
