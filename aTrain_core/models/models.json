@@ -69,6 +69,16 @@
         "model_bin_size": 3087284237,
         "model_bin_size_human": "3.09 GB"
     },
+    "large-v3-turbo": {
+        "repo_id": "aTrain-core/faster-whisper-large-v3-turbo",
+        "revision": "df99141c9f5db0615d025664cff8949373a69593",
+        "type": "regular",
+        "num_filtered_files": 7,
+        "download_chunk_size": 10485760,
+        "chunks_total": 301,
+        "model_bin_size": 3087284237,
+        "model_bin_size_human": "1.62 GB"
+    },
     "diarize": {
         "repo_id": "aTrain-core/diarize",
         "revision": "af59b6c3c3261a53bbfb1d78d36a10fcd8de3084",
