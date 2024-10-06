@@ -15,7 +15,6 @@ def create_directory(file_id):
     os.makedirs(TRANSCRIPT_DIR, exist_ok=True)
     file_directory = os.path.join(TRANSCRIPT_DIR, file_id)
     os.makedirs(file_directory, exist_ok=True)
-    print(f"Created directory at {file_directory}")
 
 
 def create_file_id(file_path, timestamp):
@@ -32,7 +31,6 @@ def create_file_id(file_path, timestamp):
         file_base_name[0:7] if len(file_base_name) >= 5 else file_base_name
     )
     file_id = timestamp + "-" + short_base_name
-    print(file_id)
     return file_id
 
 

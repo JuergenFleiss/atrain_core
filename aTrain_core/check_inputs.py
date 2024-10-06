@@ -17,20 +17,6 @@ def check_inputs_transcribe(file, model, language, device):
         )
 
 
-# def check_audio(file):
-#     # Run ffprobe on the specified file and return a JSON representation of the output.
-#     # https://kkroening.github.io/ffmpeg-python/
-#     # Use select_streams='a' for getting only audio streams information
-#     p = ffmpeg.probe(file, select_streams="a")
-
-#     # If p['streams'] is not empty, clip has an audio stream
-#     if p["streams"]:
-#         print("Video clip has audio!")
-#         return True
-#     else:
-#         raise ValueError("File has no audio stream.")
-
-
 def check_file(file):
     """Check if the provided file is in a correct format for transcription."""
     # if isinstance(file, str):
@@ -40,7 +26,6 @@ def check_file(file):
     #     filename = file.filename
     file_extension = os.path.splitext(filename)[-1]
     file_extension_lower = str(file_extension).lower()
-    print(file_extension_lower)  # try pyav and return error
     correct_file_formats = [
         ".3dostr",
         ".4xm",
@@ -393,17 +378,14 @@ def check_model(model, language):
         )
 
     if models[model]["type"] == "regular":
-        # print(f" model: {models[model]['type']} is used")
         return model in available_models
 
     elif models[model]["type"] == "distil":
-        # print(f" model: {models[model]['type']} is used")
         if language != models[model]["language"]:
             raise ValueError(
                 f"Language input wrong or unspecified. This distil model is only available in {models[model]['language']} and has to be specified."
             )
         else:
-            print("Distil model and language chosen successfully")
             return model in available_models
 
 

@@ -328,11 +328,9 @@ def snapshot_download(
     test = True  # Added for testing purposes
     if test:
         for file in filtered_repo_files:
-            print(f"Downloading {file}")
             _inner_hf_hub_download(file, progress_callback=progress_callback)
 
     else:
-        print("filtered repo files:", filtered_repo_files)
         thread_map(
             lambda file: _inner_hf_hub_download(
                 file, progress_callback=progress_callback

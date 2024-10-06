@@ -41,9 +41,7 @@ class CustomPipeline(Pipeline):
         path_segmentation_model = os.path.join(model_path, "segmentation_pyannote.bin")
         path_embedding_model = os.path.join(model_path, "embedding_pyannote.bin")
         params["segmentation"] = path_segmentation_model.replace("\\", "/")
-        print(params["segmentation"])
         params["embedding"] = path_embedding_model.replace("\\", "/")
-        print(params["embedding"])
         pipeline: Pipeline = Klass(**params)
         pipeline.instantiate(config["params"])
         return pipeline
@@ -187,7 +185,6 @@ def _perform_pyannote_speaker_diarization(
 
     total_steps = calculate_steps(audio_duration)
     current_step = 0
-    print("Loading speaker detection model")
     model_path = get_model("diarize", required_models_dir=required_models_dir)
     write_logfile("Speaker detection model loaded", file_id)
     diarize_model = CustomPipeline.from_pretrained(model_path, required_models_dir).to(
@@ -209,7 +206,6 @@ def _perform_pyannote_speaker_diarization(
     if current_step < total_steps:
         current_step = total_steps
         GUI.progress_info(current_step, total_steps)
-        print(f"Progress {current_step}/{total_steps}")
     speaker_results = transform_speakers_results(diarization_segments)
     write_logfile("Transformed diarization segments to speaker results", file_id)
     del diarize_model

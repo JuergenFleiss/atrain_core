@@ -86,11 +86,9 @@ def cli():
 
     if args.command == "load":
         if args.model == "all":
-            print("Downloading all models:")
             download_all_models()
             print("All models downloaded")
         else:
-            print(f"Downloading model {args.model}")
             get_model(args.model)
             print(f"Model {args.model} downloaded")
 

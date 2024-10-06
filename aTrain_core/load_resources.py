@@ -62,14 +62,12 @@ def get_model(
             local_dir_use_symlinks=False,
             progress_callback=progress_callback,
         )
-        print(f"Model downloaded to {model_path}")
 
     return model_path
 
 
 def remove_model(model, models_dir=MODELS_DIR):
     model_path = os.path.join(models_dir, model)
-    print(f"Removing model {model} at path: {model_path}")
     if os.path.exists(model_path):
         shutil.rmtree(model_path)  # This deletes the directory and all its contents
 
