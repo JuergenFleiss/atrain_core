@@ -75,8 +75,8 @@
         "type": "regular",
         "num_filtered_files": 7,
         "download_chunk_size": 10485760,
-        "chunks_total": 301,
-        "model_bin_size": 3087284237,
+        "chunks_total": 161,
+        "model_bin_size": 1617884929,
         "model_bin_size_human": "1.62 GB"
     },
     "diarize": {
