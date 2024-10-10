@@ -322,24 +322,8 @@ def snapshot_download(
             progress_callback=progress_callback,
         )
 
-    # if HF_HUB_ENABLE_HF_TRANSFER:                                # commented out
-    # when using hf_transfer we don't want extra parallelism
-    # from the one hf_transfer provides
-    test = True  # Added for testing purposes
-    if test:
-        for file in filtered_repo_files:
-            _inner_hf_hub_download(file, progress_callback=progress_callback)
-
-    else:
-        thread_map(
-            lambda file: _inner_hf_hub_download(
-                file, progress_callback=progress_callback
-            ),
-            filtered_repo_files,
-            desc=f"Fetching {len(filtered_repo_files)} files",
-            max_workers=max_workers,
-            tqdm_class=tqdm_class or hf_tqdm,
-        )
+    for file in filtered_repo_files:
+        _inner_hf_hub_download(file, progress_callback=progress_callback)
 
     if local_dir is not None:
         return str(os.path.realpath(local_dir))
