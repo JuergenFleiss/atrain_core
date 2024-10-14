@@ -55,12 +55,11 @@ def get_total_model_download_steps(model_name):
     The metadata has been pre-calculated by downloading the models"""
 
     models_config = load_model_config_file()
-    model_info = models_config[model_name]
-
-    if model_name in models_config:
+    try:
+        model_info = models_config[model_name]
         total_chunks = model_info["chunks_total"]
 
-    else:
+    except KeyError:
         total_chunks = None
 
     return total_chunks
