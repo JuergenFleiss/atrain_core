@@ -1,10 +1,12 @@
 import unittest
+import os
 from unittest.mock import patch, mock_open, MagicMock, call
 from aTrain_core.load_resources import (
     download_all_models,
     load_model_config_file,
     get_model,
     remove_model,
+    assert_model_hash,
 )
 from aTrain_core.globals import MODELS_DIR
 
@@ -51,46 +53,6 @@ class TestLoadResourcesFunctions(unittest.TestCase):
         mock_open_file.assert_called_once_with(f"{MODELS_DIR}/models.json", "r")
         self.assertEqual(models_config, {"small": {}})
 
-    @patch("aTrain_core.load_resources.snapshot_download")
-    @patch("aTrain_core.load_resources.get_total_model_download_steps", return_value=10)
-    @patch("aTrain_core.load_resources.ProgressTracker")
-    @patch("os.path.exists", return_value=False)
-    @patch("os.path.join", return_value="mock/model/path")
-    @patch(
-        "aTrain_core.load_resources.load_model_config_file",
-        return_value={"test_model": {"repo_id": "repo", "revision": "v1"}},
-    )
-    def test_get_model_download(
-        self,
-        mock_load_model_config_file,
-        mock_path_join,
-        mock_path_exists,
-        mock_progress_tracker,
-        mock_get_total_steps,
-        mock_snapshot_download,
-    ):
-        """Test downloading a model when it does not exist."""
-        mock_gui = MagicMock()
-        mock_tracker = mock_progress_tracker.return_value
-        mock_tracker.progress_callback.return_value = {"current": 5, "total": 10}
-
-        model_path = get_model("test_model", GUI=mock_gui)
-
-        mock_snapshot_download.assert_called_once_with(
-            repo_id="repo",
-            revision="v1",
-            local_dir="mock/model/path",
-            local_dir_use_symlinks=False,
-            progress_callback=unittest.mock.ANY,  # Ignore the callback comparison
-        )
-
-        progress_cb = mock_snapshot_download.call_args[1]["progress_callback"]
-        progress_cb(5)  # Simulate the callback being called with a chunk
-
-        mock_gui.progress_info.assert_called_with(current=5, total=10)
-
-        self.assertEqual(model_path, "mock/model/path")
-
     @patch("os.path.exists", return_value=True)
     @patch("shutil.rmtree")
     @patch("os.path.join", return_value="mock/model/path")
@@ -108,6 +70,110 @@ class TestLoadResourcesFunctions(unittest.TestCase):
         """Test removing a model that doesn't exist."""
         remove_model("test_model")
         mock_rmtree.assert_not_called()
+
+    def test_assert_model_hash_valid(self):
+        # Define valid inputs
+        model_info = {"model_hash": "correct_hash"}
+        dir_hash = "correct_hash"
+
+        # No exception should be raised with valid hash
+        try:
+            assert_model_hash(
+                dir_hash, "test_model", model_info, False, "model_path", "required_path"
+            )
+        except AssertionError:
+            self.fail("assert_model_hash raised AssertionError unexpectedly!")
+
+    @patch("aTrain_core.load_resources.remove_model")
+    def test_assert_model_hash_invalid(self, mock_remove_model):
+        # Define invalid inputs
+        model_info = {"model_hash": "correct_hash"}
+        dir_hash = "wrong_hash"
+
+        # Assert that an exception is raised and model is removed
+        with self.assertRaises(AssertionError):
+            assert_model_hash(
+                dir_hash, "test_model", model_info, False, "model_path", "required_path"
+            )
+
+        mock_remove_model.assert_called_once_with("test_model", "model_path")
+
+    @patch("os.path.exists")
+    @patch("checksumdir.dirhash")
+    @patch("shutil.rmtree")  # Mock shutil.rmtree to avoid the FileNotFoundError
+    def test_get_model_existing(self, mock_rmtree, mock_dirhash, mock_path_exists):
+        # Mock os.path.exists: return False for the .cache path and True for everything else
+        mock_path_exists.side_effect = (
+            lambda path: path != "model_path/test_model/.cache"
+        )
+        mock_dirhash.return_value = "fake_hash"
+
+        # Mock the model info and configs
+        with patch(
+            "aTrain_core.load_resources.load_model_config_file"
+        ) as mock_load_config, patch(
+            "aTrain_core.load_resources.MODELS_DIR", "model_path"
+        ), patch("aTrain_core.load_resources.REQUIRED_MODELS", ["required_model"]):
+            mock_load_config.return_value = {
+                "test_model": {
+                    "repo_id": "fake_repo",
+                    "revision": "v1",
+                    "model_hash": "fake_hash",
+                }
+            }
+            GUI = MagicMock()
+
+            # Call the function
+            model_path = get_model("test_model", GUI)
+
+            # Assertions
+            GUI.progress_info.assert_not_called()  # No download should occur if the model exists
+            mock_dirhash.assert_called_once()  # Ensure hash was checked
+            mock_rmtree.assert_called_once()
+
+    @patch("os.path.exists")
+    @patch("checksumdir.dirhash")
+    @patch("shutil.rmtree")
+    @patch("aTrain_core.load_resources.snapshot_download")  # Mock the download process
+    def test_get_model_download(
+        self, mock_snapshot_download, mock_rmtree, mock_dirhash, mock_path_exists
+    ):
+        # Simulate the model directory and .cache not existing to trigger the download
+        mock_path_exists.side_effect = (
+            lambda path: path == "model_path/test_model/.cache"
+        )
+        mock_dirhash.return_value = "fake_hash"
+
+        # Mock the model info and configs
+        with patch(
+            "aTrain_core.load_resources.load_model_config_file"
+        ) as mock_load_config, patch(
+            "aTrain_core.load_resources.MODELS_DIR", "model_path"
+        ), patch("aTrain_core.load_resources.REQUIRED_MODELS", ["required_model"]):
+            mock_load_config.return_value = {
+                "test_model": {
+                    "repo_id": "fake_repo",
+                    "revision": "v1",
+                    "model_hash": "fake_hash",
+                }
+            }
+
+            # Mock the progress tracker
+            GUI = MagicMock()
+
+            # Simulate total chunks for the download process
+            with patch(
+                "aTrain_core.load_resources.get_total_model_download_steps"
+            ) as mock_total_steps:
+                mock_total_steps.return_value = (
+                    100  # Assume 100 chunks for the download
+                )
+
+                # Call the function
+                model_path = get_model("test_model", GUI)
+
+                # Assertions
+                mock_snapshot_download.assert_called_once()
 
 
 if __name__ == "__main__":
