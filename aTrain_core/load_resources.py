@@ -87,7 +87,7 @@ def assert_model_hash(
     print("Models dir", models_dir)
     print("Required models dir", required_models_dir)
 
-    if is_required and models_dir != required_models_dir:
+    if is_required and models_dir != MODELS_DIR:
         return
 
     if dir_hash != model_info["model_hash"]:
