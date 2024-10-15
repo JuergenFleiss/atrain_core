@@ -75,16 +75,15 @@ def get_model(
     print(f"Model {model} loaded with hash {dir_hash} into {model_path}")
 
     assert_model_hash(
-        model, model_path, model_info, is_required, models_dir, required_models_dir
+        dir_hash, model, model_info, is_required, models_dir, required_models_dir
     )
 
     return model_path
 
 
 def assert_model_hash(
-    model, model_path, model_info, is_required, models_dir, required_models_dir
+    dir_hash, model, model_info, is_required, models_dir, required_models_dir
 ):
-    dir_hash = checksumdir.dirhash(model_path)
     if is_required and models_dir != required_models_dir:
         if dir_hash != model_info["model_hash_required"]:
             remove_model(model, models_dir)

@@ -73,7 +73,8 @@
         "download_chunk_size": 10485760,
         "chunks_total": 301,
         "model_bin_size": 3087284237,
-        "model_bin_size_human": "3.09 GB"
+        "model_bin_size_human": "3.09 GB",
+        "model_hash": "1fabbdfbd3778953da3511dec2a46892"
     },
     "large-v3-turbo": {
         "repo_id": "aTrain-core/faster-whisper-large-v3-turbo",
@@ -107,6 +108,7 @@
         "download_chunk_size": 10485760,
         "chunks_total": 151,
         "model_bin_size": 1512556667,
-        "model_bin_size_human": "1.51 GB"
+        "model_bin_size_human": "1.51 GB",
+        "model_hash": "2096615732503af5957f0dca6bcfcde2"
     }
 }
