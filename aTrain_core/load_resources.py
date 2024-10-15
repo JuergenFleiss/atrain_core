@@ -72,8 +72,6 @@ def get_model(
         shutil.rmtree(cache_path)
 
     dir_hash = checksumdir.dirhash(model_path)
-    print(f"Model {model} loaded with hash {dir_hash} into {model_path}")
-
     assert_model_hash(
         dir_hash, model, model_info, is_required, models_dir, required_models_dir
     )
@@ -84,9 +82,6 @@ def get_model(
 def assert_model_hash(
     dir_hash, model, model_info, is_required, models_dir, required_models_dir
 ):
-    print("Models dir", models_dir)
-    print("Required models dir", required_models_dir)
-
     if is_required and models_dir != MODELS_DIR:
         return
 
