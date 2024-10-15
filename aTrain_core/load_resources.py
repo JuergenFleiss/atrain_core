@@ -84,6 +84,9 @@ def get_model(
 def assert_model_hash(
     dir_hash, model, model_info, is_required, models_dir, required_models_dir
 ):
+    print("Models dir", models_dir)
+    print("Required models dir", required_models_dir)
+
     if is_required and models_dir != required_models_dir:
         return
 
