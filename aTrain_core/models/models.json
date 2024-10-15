@@ -85,8 +85,7 @@
         "chunks_total": 161,
         "model_bin_size": 1617884929,
         "model_bin_size_human": "1.62 GB",
-        "model_hash": "e98f138982bd52d75c01fe44f2bfeae6",
-        "model_hash_required": "MISSING"
+        "model_hash": "e98f138982bd52d75c01fe44f2bfeae6"
     },
     "diarize": {
         "repo_id": "aTrain-core/diarize",
@@ -96,8 +95,7 @@
         "chunks_total": 14,
         "model_bin_size": 114102729,
         "model_bin_size_human": "114.10 MB",
-        "model_hash": "c766bd0c6e2bd8523da2a61b2eff0b9f",
-        "model_hash_required": "MISSING"
+        "model_hash": "c766bd0c6e2bd8523da2a61b2eff0b9f"
     },
     "faster-distil-english": {
         "repo_id": "aTrain-core/faster-distil-whisper-large-v2",

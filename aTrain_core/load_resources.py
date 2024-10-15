@@ -87,12 +87,11 @@ def assert_model_hash(
     if is_required and models_dir != required_models_dir:
         return
 
-    else:
-        if dir_hash != model_info["model_hash"]:
-            remove_model(model, models_dir)
-            raise AssertionError(
-                f"The model folder has been modified and will be deleted automatically. \n Please download model '{model}' again if you wish to use it."
-            )
+    if dir_hash != model_info["model_hash"]:
+        remove_model(model, models_dir)
+        raise AssertionError(
+            f"The model folder has been modified and will be deleted automatically. \n Please download model '{model}' again if you wish to use it."
+        )
 
 
 def remove_model(model, models_dir=MODELS_DIR):
