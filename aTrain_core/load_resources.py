@@ -1,5 +1,6 @@
 import json
 import os
+import checksumdir
 
 # from huggingface_hub import snapshot_download
 import shutil
@@ -40,8 +41,11 @@ def get_model(
     """Loads a specific model."""
     models_config = load_model_config_file()
     model_info = models_config[model]
+
+    is_required = False
     if model in REQUIRED_MODELS:
         models_dir = required_models_dir
+        is_required = True
     model_path = os.path.join(models_dir, model)
 
     if not os.path.exists(model_path):
@@ -63,7 +67,29 @@ def get_model(
             progress_callback=progress_callback,
         )
 
+    cache_path = f"{model_path}/.cache"
+    if os.path.exists(cache_path):
+        shutil.rmtree(cache_path)
+
+    dir_hash = checksumdir.dirhash(model_path)
+    assert_model_hash(
+        dir_hash, model, model_info, is_required, models_dir, required_models_dir
+    )
+
     return model_path
+
+
+def assert_model_hash(
+    dir_hash, model, model_info, is_required, models_dir, required_models_dir
+):
+    if is_required and models_dir != MODELS_DIR:
+        return
+
+    if dir_hash != model_info["model_hash"]:
+        remove_model(model, models_dir)
+        raise AssertionError(
+            f"The model folder has been modified and will be deleted automatically. \n Please download model '{model}' again if you wish to use it."
+        )
 
 
 def remove_model(model, models_dir=MODELS_DIR):

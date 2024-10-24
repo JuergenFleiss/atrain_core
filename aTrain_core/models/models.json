@@ -7,7 +7,8 @@
         "download_chunk_size": 10485760,
         "chunks_total": 14,
         "model_bin_size": 75538270,
-        "model_bin_size_human": "75.54 MB"
+        "model_bin_size_human": "75.54 MB",
+        "model_hash": "deaa36272cf308db269e36aee4ee7e7e"
     },
     "base": {
         "repo_id": "aTrain-core/faster-whisper-base",
@@ -17,7 +18,8 @@
         "download_chunk_size": 10485760,
         "chunks_total": 20,
         "model_bin_size": 145217532,
-        "model_bin_size_human": "145.22 MB"
+        "model_bin_size_human": "145.22 MB",
+        "model_hash": "e608bc07cd1a2b5b96c936b87496f124"
     },
     "small": {
         "repo_id": "aTrain-core/faster-whisper-small",
@@ -27,7 +29,8 @@
         "download_chunk_size": 10485760,
         "chunks_total": 53,
         "model_bin_size": 483546902,
-        "model_bin_size_human": "483.55 MB"
+        "model_bin_size_human": "483.55 MB",
+        "model_hash": "5f7a4a155c61466f1174e4fa05e920d7"
     },
     "medium": {
         "repo_id": "aTrain-core/faster-whisper-medium",
@@ -37,7 +40,8 @@
         "download_chunk_size": 10485760,
         "chunks_total": 152,
         "model_bin_size": 1527906378,
-        "model_bin_size_human": "1.53 GB"
+        "model_bin_size_human": "1.53 GB",
+        "model_hash": "a283a76986984ba912a1e00dfd4ab61f"
     },
     "large-v1": {
         "repo_id": "aTrain-core/faster-whisper-large-v1",
@@ -47,7 +51,8 @@
         "download_chunk_size": 10485760,
         "chunks_total": 301,
         "model_bin_size": 3086912962,
-        "model_bin_size_human": "3.09 GB"
+        "model_bin_size_human": "3.09 GB",
+        "model_hash": "2b1ab832d06681fb5635e9405b3804df"
     },
     "large-v2": {
         "repo_id": "aTrain-core/faster-whisper-large-v2",
@@ -57,7 +62,8 @@
         "download_chunk_size": 10485760,
         "chunks_total": 301,
         "model_bin_size": 3086912962,
-        "model_bin_size_human": "3.09 GB"
+        "model_bin_size_human": "3.09 GB",
+        "model_hash": "2e64b72afb2ebea789d35a0630564772"
     },
     "large-v3": {
         "repo_id": "aTrain-core/faster-whisper-large-v3",
@@ -67,7 +73,8 @@
         "download_chunk_size": 10485760,
         "chunks_total": 301,
         "model_bin_size": 3087284237,
-        "model_bin_size_human": "3.09 GB"
+        "model_bin_size_human": "3.09 GB",
+        "model_hash": "1fabbdfbd3778953da3511dec2a46892"
     },
     "large-v3-turbo": {
         "repo_id": "aTrain-core/faster-whisper-large-v3-turbo",
@@ -77,7 +84,8 @@
         "download_chunk_size": 10485760,
         "chunks_total": 161,
         "model_bin_size": 1617884929,
-        "model_bin_size_human": "1.62 GB"
+        "model_bin_size_human": "1.62 GB",
+        "model_hash": "e98f138982bd52d75c01fe44f2bfeae6"
     },
     "diarize": {
         "repo_id": "aTrain-core/diarize",
@@ -86,7 +94,8 @@
         "download_chunk_size": 10485760,
         "chunks_total": 14,
         "model_bin_size": 114102729,
-        "model_bin_size_human": "114.10 MB"
+        "model_bin_size_human": "114.10 MB",
+        "model_hash": "c766bd0c6e2bd8523da2a61b2eff0b9f"
     },
     "faster-distil-english": {
         "repo_id": "aTrain-core/faster-distil-whisper-large-v2",
@@ -97,6 +106,7 @@
         "download_chunk_size": 10485760,
         "chunks_total": 151,
         "model_bin_size": 1512556667,
-        "model_bin_size_human": "1.51 GB"
+        "model_bin_size_human": "1.51 GB",
+        "model_hash": "2096615732503af5957f0dca6bcfcde2"
     }
 }
