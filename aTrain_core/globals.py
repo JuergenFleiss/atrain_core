@@ -1,6 +1,6 @@
 import os
 
-USER_DIR = os.path.expanduser("~")
+USER_DIR = os.environ['SNAP_USER_DATA']
 DOCUMENTS_DIR = os.path.join(USER_DIR, "Documents")
 ATRAIN_DIR = os.path.join(DOCUMENTS_DIR, "aTrain")
 MODELS_DIR = os.path.join(ATRAIN_DIR, "models")
