@@ -1,10 +1,10 @@
 import os
 
 USER_DIR = os.environ['SNAP_USER_DATA']
-DOCUMENTS_DIR = os.path.join(USER_DIR, "Documents")
-ATRAIN_DIR = os.path.join(DOCUMENTS_DIR, "aTrain")
-MODELS_DIR = os.path.join(ATRAIN_DIR, "models")
-TRANSCRIPT_DIR = os.path.join(ATRAIN_DIR, "transcriptions")
+DOCUMENTS_DIR = USER_DIR
+ATRAIN_DIR = USER_DIR
+MODELS_DIR = USER_DIR
+TRANSCRIPT_DIR = USER_DIR
 METADATA_FILENAME = "metadata.txt"
 LOG_FILENAME = "log.txt"
 TIMESTAMP_FORMAT = "%Y-%m-%d %H-%M-%S"
