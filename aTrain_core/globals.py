@@ -1,6 +1,6 @@
 import os
 
-USER_DIR = os.environ['HOME']
+USER_DIR = os.environ['SNAP_DATA']
 DOCUMENTS_DIR = USER_DIR
 ATRAIN_DIR = USER_DIR
 MODELS_DIR = USER_DIR
