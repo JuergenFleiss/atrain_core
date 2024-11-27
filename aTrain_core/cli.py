@@ -105,6 +105,7 @@ def cli():
 
         # Secure the base name (remove unsafe characters)
         secure_file_base_name = secure_filename(file_base_name)
+        secure_file_base_name = secure_file_base_name.replace(" ", "_")
 
         filename = os.path.join(dir_name, secure_file_base_name)
 
