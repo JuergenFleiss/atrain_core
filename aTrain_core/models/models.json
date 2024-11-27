@@ -19,7 +19,7 @@
         "chunks_total": 20,
         "model_bin_size": 145217532,
         "model_bin_size_human": "145.22 MB",
-        "model_hash": "e608bc07cd1a2b5b96c936b87496f124"
+        "model_hash": "08c31dd725d2af89f150bada5732083c"
     },
     "small": {
         "repo_id": "aTrain-core/faster-whisper-small",
@@ -30,7 +30,7 @@
         "chunks_total": 53,
         "model_bin_size": 483546902,
         "model_bin_size_human": "483.55 MB",
-        "model_hash": "5f7a4a155c61466f1174e4fa05e920d7"
+        "model_hash": "ec115fc82fffc501eb31c011deef41c8"
     },
     "medium": {
         "repo_id": "aTrain-core/faster-whisper-medium",
