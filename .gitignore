@@ -11,4 +11,3 @@ aTrain_core.egg-info
 installer.iss
 prepare_msix.py
 .DS_Store
-test.py
