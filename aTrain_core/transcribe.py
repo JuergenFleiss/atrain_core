@@ -6,6 +6,7 @@ import numpy as np
 from faster_whisper import WhisperModel
 from faster_whisper.audio import decode_audio
 from tqdm import tqdm
+import platform
 
 from .globals import MODELS_DIR, SAMPLING_RATE
 from .GUI_integration import EventSender
@@ -53,8 +54,17 @@ def _prepare_metadata_creation(language, num_speakers, device, file_id, audio_fi
     try:
         audio_array = decode_audio(audio_file, sampling_rate=SAMPLING_RATE)
     except Exception as e:
-        write_logfile(f"File has no audio: {e}", file_id)
-        raise Exception("Attention: Your file has no audio.")
+        if platform.system() == "Darwin":
+            write_logfile(
+                f"Error: File has no audio or whitespaces detected in filename: {e}",
+                file_id,
+            )
+            raise Exception(
+                "Please check if there are white spaces in your audio filename and replace them (e.g. with underscores). Check if the file has no audio."
+            )
+        else:
+            write_logfile(f"File has no audio: {e}", file_id)
+            raise Exception("Your file has no audio.")
     write_logfile("Audio file loaded and decoded", file_id)
     audio_duration = int(len(audio_array) / SAMPLING_RATE)
     write_logfile("Audio duration calculated", file_id)
