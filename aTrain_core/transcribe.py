@@ -80,6 +80,7 @@ def _perform_whisper_transcription(
     file_id,
     model,
     GUI: EventSender,
+    initial_prompt=None,
 ):
     import torch
 
@@ -91,6 +92,7 @@ def _perform_whisper_transcription(
 
     model_type = models[model]["type"]
     max_new_tokens = None if model_type == "distil" else 128
+    condition_on_previous_text = False if model_type == "distil" else True
 
     write_logfile(f"Transcribing with {model_type} model.", file_id)
 
@@ -102,7 +104,8 @@ def _perform_whisper_transcription(
         language=language,
         max_new_tokens=max_new_tokens,
         no_speech_threshold=0.6,
-        condition_on_previous_text=False,
+        condition_on_previous_text=condition_on_previous_text,
+        initial_prompt=initial_prompt,
     )
 
     transcription_segments = transcription_with_progress_bar(
@@ -238,6 +241,7 @@ def transcribe(
     compute_type,
     timestamp,
     original_audio_filename,
+    initial_prompt=None,
     GUI: EventSender = EventSender(),
     required_models_dir=MODELS_DIR,
 ):
@@ -271,7 +275,15 @@ def transcribe(
     write_logfile("Model loaded", file_id)
 
     transcript = _perform_whisper_transcription(
-        model_path, device, compute_type, audio_array, language, file_id, model, GUI
+        model_path,
+        device,
+        compute_type,
+        audio_array,
+        language,
+        file_id,
+        model,
+        GUI,
+        initial_prompt,
     )
 
     if not speaker_detection:
