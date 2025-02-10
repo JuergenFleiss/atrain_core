@@ -6,7 +6,7 @@ from typing import List
 
 
 class EventSender:
-    def __init__(self, maxsize: int = 10):
+    def __init__(self, maxsize: int = 0):
         self.listeners: List[Queue] = []
         self.maxsize: int = maxsize
 
