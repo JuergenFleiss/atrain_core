@@ -142,6 +142,7 @@ def _perform_whisper_transcription(
 
     model_type = models[model]["type"]
     max_new_tokens = None if model_type == "distil" else 128
+    condition_on_previous_text = False if model_type == "distil" else True
 
     write_logfile(f"Transcribing with {model_type} model.", file_id)
 
@@ -153,7 +154,7 @@ def _perform_whisper_transcription(
         language=language,
         max_new_tokens=max_new_tokens,
         no_speech_threshold=0.6,
-        condition_on_previous_text=False,
+        condition_on_previous_text=condition_on_previous_text,
     )
 
     transcription_segments = transcription_with_progress_bar(
