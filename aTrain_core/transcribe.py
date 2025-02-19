@@ -131,6 +131,7 @@ def _perform_whisper_transcription(
     file_id,
     model,
     GUI: EventSender,
+    initial_prompt=None,
 ):
     import torch
 
@@ -288,6 +289,7 @@ def transcribe(
     compute_type,
     timestamp,
     original_audio_filename,
+    initial_prompt=None,
     GUI: EventSender = EventSender(),
     required_models_dir=MODELS_DIR,
 ):
@@ -321,7 +323,15 @@ def transcribe(
     write_logfile("Model loaded", file_id)
 
     transcript = _perform_whisper_transcription(
-        model_path, device, compute_type, audio_array, language, file_id, model, GUI
+        model_path,
+        device,
+        compute_type,
+        audio_array,
+        language,
+        file_id,
+        model,
+        GUI,
+        initial_prompt,
     )
 
     if not speaker_detection:
