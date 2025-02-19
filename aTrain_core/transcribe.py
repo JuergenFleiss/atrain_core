@@ -295,11 +295,16 @@ def transcribe(
     timestamp,
     original_audio_filename,
     initial_prompt=None,
-    GUI: EventSender = EventSender(),
+    GUI: EventSender = None,
     required_models_dir=MODELS_DIR,
 ):
     """Transcribes audio file with specified parameters."""
     # import inside function for faster startup times in GUI app
+
+    if GUI is None:
+        GUI = EventSender()  # Initialize only if not provided
+
+    print(f"DEBUG: GUI is of type {type(GUI)}")
 
     GUI.task_info("Prepare")
     write_logfile("Directory created", file_id)
