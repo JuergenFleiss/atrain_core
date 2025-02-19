@@ -113,7 +113,6 @@ def cli():
 
         # Join the directory path with the secure base name to get the full path
         filename = os.path.join(dir_name, secure_file_base_name)
-        filename = str(filename)
 
         file_id = create_file_id(filename, timestamp)
         create_directory(file_id)
