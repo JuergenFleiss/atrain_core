@@ -105,14 +105,16 @@ def cli():
         print("Running aTrain_core")
         timestamp = datetime.now().strftime(TIMESTAMP_FORMAT)
 
-        dir_name = os.path.dirname(args.audiofile)
-        file_base_name = os.path.basename(args.audiofile)
+        # dir_name = os.path.dirname(args.audiofile)
+        # file_base_name = os.path.basename(args.audiofile)
 
-        # Secure the base name (remove unsafe characters)
-        secure_file_base_name = secure_filename(file_base_name)
+        # # Secure the base name (remove unsafe characters)
+        # secure_file_base_name = secure_filename(file_base_name)
 
-        # Join the directory path with the secure base name to get the full path
-        filename = os.path.join(dir_name, secure_file_base_name)
+        # # Join the directory path with the secure base name to get the full path
+        # filename = os.path.join(dir_name, secure_file_base_name)
+
+        filename = os.path.abspath(args.audiofile)  # Get full absolute path
 
         file_id = create_file_id(filename, timestamp)
         create_directory(file_id)
