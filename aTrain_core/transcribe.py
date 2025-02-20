@@ -111,7 +111,6 @@ def _prepare_metadata_creation(language, num_speakers, device, file_id, audio_fi
     )
     device = "cuda" if device == "GPU" else "cpu"
 
-    audio_file = f'"{audio_file}"'
     try:
         audio_array = decode_audio(audio_file, sampling_rate=SAMPLING_RATE)
     except Exception as e:
