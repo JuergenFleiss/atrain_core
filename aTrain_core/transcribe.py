@@ -305,8 +305,6 @@ def transcribe(
     if GUI is None:
         GUI = EventSender()  # Initialize only if not provided
 
-    print(f"DEBUG: GUI is of type {type(GUI)}")
-
     GUI.task_info("Prepare")
     write_logfile("Directory created", file_id)
 
