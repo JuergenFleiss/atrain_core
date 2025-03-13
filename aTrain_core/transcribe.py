@@ -3,7 +3,7 @@ import json
 import os
 from importlib.resources import files
 from typing import Any, Mapping, Optional, Text
-
+from multiprocessing import Manager, Process
 import numpy as np
 import yaml
 from faster_whisper import WhisperModel
@@ -127,6 +127,43 @@ def _prepare_metadata_creation(language, num_speakers, device, file_id, audio_fi
     return audio_array, audio_duration, device, min_speakers, max_speakers, language
 
 
+# workaround to deal with a termination issue: https://github.com/guillaumekln/faster-whisper/issues/71
+def run_transcription_in_seperate_process(
+    model_path,
+    device,
+    compute_type,
+    audio_array,
+    language,
+    file_id,
+    model,
+    GUI: EventSender,
+    initial_prompt=None,
+):
+    with Manager() as manager:
+        returnList = manager.list([None])
+        p = Process(
+            target=_perform_whisper_transcription,
+            kwargs={
+                "model_path": model_path,
+                "device": device,
+                "compute_type": compute_type,
+                "audio_array": audio_array,
+                "language": language,
+                "file_id": file_id,
+                "model": model,
+                "GUI": GUI,
+                "returnList": returnList,
+                "initial_prompt": initial_prompt,
+            },
+            daemon=True,
+        )  # add return target to end of args list
+        p.start()
+        p.join()
+        p.close()
+        transcript = returnList[0]
+        return transcript
+
+
 def _perform_whisper_transcription(
     model_path,
     device,
@@ -136,6 +173,7 @@ def _perform_whisper_transcription(
     file_id,
     model,
     GUI: EventSender,
+    returnList,
     initial_prompt=None,
 ):
     import torch
@@ -172,11 +210,7 @@ def _perform_whisper_transcription(
         "segments": [named_tuple_to_dict(segment) for segment in transcription_segments]
     }  # wenn man die beiden umdreht also progress bar zuerst damit er schön läuft, dann ist das segments dict leer, sprich es gibt keine transkription
     write_logfile("Transcription successful", file_id)
-
-    del transcription_model
-    gc.collect()
-    torch.cuda.empty_cache()
-    return transcript
+    returnList[0] = transcript
 
 
 def _perform_pyannote_speaker_diarization(
@@ -331,7 +365,7 @@ def transcribe(
     model_path = get_model(model, required_models_dir=required_models_dir)
     write_logfile("Model loaded", file_id)
 
-    transcript = _perform_whisper_transcription(
+    transcript = run_transcription_in_seperate_process(
         model_path,
         device,
         compute_type,
