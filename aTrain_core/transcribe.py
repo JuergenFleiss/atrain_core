@@ -365,17 +365,34 @@ def transcribe(
     model_path = get_model(model, required_models_dir=required_models_dir)
     write_logfile("Model loaded", file_id)
 
-    transcript = run_transcription_in_seperate_process(
-        model_path,
-        device,
-        compute_type,
-        audio_array,
-        language,
-        file_id,
-        model,
-        GUI,
-        initial_prompt,
-    )
+    if device == "cuda":
+        print("Transcribing in seperate process")
+        write_logfile("Transcribing in seperate process", file_id)
+        transcript = run_transcription_in_seperate_process(
+            model_path,
+            device,
+            compute_type,
+            audio_array,
+            language,
+            file_id,
+            model,
+            GUI,
+            initial_prompt,
+        )
+    elif device == "cpu":
+        print("Transcribing in same process")
+        write_logfile("Transcribing in same process", file_id)
+        transcript = _perform_whisper_transcription(
+            model_path,
+            device,
+            compute_type,
+            audio_array,
+            language,
+            file_id,
+            model,
+            GUI,
+            initial_prompt,
+        )
 
     if not speaker_detection:
         _finish_transcription_create_output_files(
