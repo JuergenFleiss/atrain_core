@@ -152,8 +152,8 @@ def run_transcription_in_seperate_process(
                 "file_id": file_id,
                 "model": model,
                 "GUI": GUI,
-                "returnList": returnList,
                 "initial_prompt": initial_prompt,
+                "returnList": returnList,
             },
             daemon=True,
         )  # add return target to end of args list
@@ -173,11 +173,9 @@ def _perform_whisper_transcription(
     file_id,
     model,
     GUI: EventSender,
-    returnList,
     initial_prompt=None,
+    returnList=[None],
 ):
-    import torch
-
     transcription_model = WhisperModel(model_path, device, compute_type=compute_type)
 
     models_config_path = str(files("aTrain_core.models").joinpath("models.json"))
