@@ -209,6 +209,7 @@ def _perform_whisper_transcription(
     }  # wenn man die beiden umdreht also progress bar zuerst damit er schön läuft, dann ist das segments dict leer, sprich es gibt keine transkription
     write_logfile("Transcription successful", file_id)
     returnList[0] = transcript
+    return transcript
 
 
 def _perform_pyannote_speaker_diarization(
