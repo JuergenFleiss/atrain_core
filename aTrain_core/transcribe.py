@@ -307,7 +307,7 @@ def _assign_word_speakers(diarize_df, transcript_result, fill_nearest=False):
 
 
 def _finish_transcription_create_output_files(
-    transcript, speaker_detection, file_id, GUI
+    transcript, speaker_detection, file_id, GUI: EventSender
 ):
     """Create output files after transcription."""
     GUI.task_info("Finish")
