@@ -4,7 +4,7 @@ import shutil
 from functools import partial
 from importlib.resources import files
 
-import huggingface_hub
+from huggingface_hub import file_download, snapshot_download
 from tqdm.auto import tqdm
 
 from .globals import MODELS_DIR, REQUIRED_MODELS
@@ -31,7 +31,7 @@ def download_all_models():
 
 def get_model(
     model: str,
-    GUI: EventSender = EventSender(),
+    GUI: EventSender | None = None,
     models_dir=MODELS_DIR,
     required_models_dir=MODELS_DIR,
 ) -> str:
@@ -44,15 +44,13 @@ def get_model(
     if os.path.exists(model_path):
         return model_path
 
-    repo_size = model_info["repo_size"]
-    tqdm_bar = custom_tqdm(total=repo_size, GUI=GUI)
+    if GUI:
+        # Monkey patching custom tqdm bar into the huggingface snapshot download
+        repo_size = model_info["repo_size"]
+        tqdm_bar = custom_tqdm(total=repo_size, GUI=GUI)
+        file_download.http_get = partial(file_download.http_get, _tqdm_bar=tqdm_bar)
 
-    # Monkey patching custom tqdm bar into the huggingface snapshot download
-    huggingface_hub.file_download.http_get = partial(
-        huggingface_hub.file_download.http_get, _tqdm_bar=tqdm_bar
-    )
-
-    huggingface_hub.snapshot_download(
+    snapshot_download(
         repo_id=model_info["repo_id"],
         revision=model_info["revision"],
         local_dir=model_path,
