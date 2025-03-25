@@ -46,24 +46,3 @@ class EventSender:
     def finished_info(self):
         """Send an event to the frond to inidcate that a process has finished."""
         self.__send(data="", event="finished")
-
-
-class ProgressTracker:
-    def __init__(self, total_chunks):
-        self.total_chunks = total_chunks
-        self.completed_chunks = 0
-        self.progress_data = []
-
-    def progress_callback(self, current_chunk):
-        self.completed_chunks += 1
-        overall_progress = (self.completed_chunks / self.total_chunks) * 100
-        progress_info = {
-            "current": self.completed_chunks,
-            "total": self.total_chunks,
-            "percentage": overall_progress,
-        }
-        self.progress_data.append(progress_info)
-        return progress_info
-
-    def get_progress(self):
-        return self.progress_data
