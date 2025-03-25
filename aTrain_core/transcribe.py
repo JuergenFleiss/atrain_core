@@ -178,7 +178,7 @@ def _perform_whisper_transcription(
 ):
     transcription_model = WhisperModel(model_path, device, compute_type=compute_type)
 
-    models_config_path = str(files("aTrain_core.models").joinpath("models.json"))
+    models_config_path = str(files("aTrain_core.data").joinpath("models.json"))
     f = open(models_config_path, "r")
     models = json.load(f)
 

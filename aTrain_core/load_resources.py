@@ -22,7 +22,7 @@ def load_model_config_file():
     """Loads the model configuration file."""
 
     # only load large v3
-    models_config_path = str(files("aTrain_core.models").joinpath("models.json"))
+    models_config_path = str(files("aTrain_core.data").joinpath("models.json"))
     with open(models_config_path, "r") as models_config_file:
         models_config = json.load(models_config_file)
     return models_config

@@ -365,7 +365,7 @@ def check_device(device):
 def check_model(model, language):
     """Check if the provided model and language are valid for transcription."""
     # better to look into models.json and check if available
-    models_config_path = str(files("aTrain_core.models").joinpath("models.json"))
+    models_config_path = str(files("aTrain_core.data").joinpath("models.json"))
     f = open(models_config_path, "r")
     models = json.load(f)
     available_models = []
