@@ -18,13 +18,11 @@ def download_all_models():
         get_model(model)
 
 
-def load_model_config_file():
+def load_model_config_file() -> dict:
     """Loads the model configuration file."""
-
-    # only load large v3
     models_config_path = str(files("aTrain_core.data").joinpath("models.json"))
     with open(models_config_path, "r") as models_config_file:
-        models_config = json.load(models_config_file)
+        models_config: dict = json.load(models_config_file)
     return models_config
 
 
