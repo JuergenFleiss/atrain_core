@@ -1,5 +1,4 @@
 import json
-import os
 from multiprocessing import Queue
 from queue import Full
 from typing import List
