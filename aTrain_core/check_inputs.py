@@ -1,7 +1,6 @@
 import json
 import os
 from importlib.resources import files
-# import ffmpeg
 
 
 def check_inputs_transcribe(file, model, language, device):
