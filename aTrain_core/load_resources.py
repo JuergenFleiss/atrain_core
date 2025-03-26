@@ -29,21 +29,7 @@ def download_all_models():
         get_model(model)
 
 
-def get_model(
-    model: str,
-    GUI: EventSender | None = None,
-    models_dir=MODELS_DIR,
-    required_models_dir=MODELS_DIR,
-) -> str:
-    """Loads a specific model."""
-    models_config = load_model_config_file()
-    model_info = models_config[model]
-    models_dir = required_models_dir if model in REQUIRED_MODELS else models_dir
-    model_path = os.path.join(models_dir, model)
-
-    if os.path.exists(model_path):
-        return model_path
-
+def download_model(model_path: str, model_info: dict, GUI: EventSender | None = None):
     if GUI:
         # Monkey patching custom tqdm bar into the huggingface snapshot download
         repo_size = model_info["repo_size"]
@@ -58,6 +44,20 @@ def get_model(
         max_workers=1,
     )
 
+
+def get_model(
+    model: str,
+    GUI: EventSender | None = None,
+    models_dir=MODELS_DIR,
+    required_models_dir=MODELS_DIR,
+) -> str:
+    """Loads a specific model."""
+    models_config = load_model_config_file()
+    model_info = models_config[model]
+    models_dir = required_models_dir if model in REQUIRED_MODELS else models_dir
+    model_path = os.path.join(models_dir, model)
+    if not os.path.exists(model_path):
+        download_model(model_path, model_info, GUI)
     return model_path
 
 
