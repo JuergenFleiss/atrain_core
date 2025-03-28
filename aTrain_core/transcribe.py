@@ -208,8 +208,11 @@ def _perform_whisper_transcription(
         "segments": [named_tuple_to_dict(segment) for segment in transcription_segments]
     }  # wenn man die beiden umdreht also progress bar zuerst damit er schön läuft, dann ist das segments dict leer, sprich es gibt keine transkription
     write_logfile("Transcription successful", file_id)
-    returnList[0] = transcript
-    return transcript
+    if device == "cpu":
+        return transcript
+    elif device == "cuda":
+        returnList[0] = transcript
+        os._exit(0)
 
 
 def _perform_pyannote_speaker_diarization(
