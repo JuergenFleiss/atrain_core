@@ -97,7 +97,7 @@
         "model_bin_size_human": "114.10 MB",
         "model_hash": "c766bd0c6e2bd8523da2a61b2eff0b9f"
     },
-    "faster-distil-english (beta)": {
+    "faster-distil-english": {
         "repo_id": "aTrain-core/faster-distil-whisper-large-v2",
         "revision": "bcbc5787cacc46911e38af69b7f32adc48512983",
         "type": "distil",
