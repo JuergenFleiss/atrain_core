@@ -70,9 +70,6 @@ def cli():
         "--num_speakers", default="auto-detect", help="Number of speakers"
     )
     parser_transcribe.add_argument(
-        "--prompt", default=None, help="Initial prompt to guide the style of the transcription."
-    )
-    parser_transcribe.add_argument(
         "--device",
         default="CPU",
         choices=["CPU", "GPU"],
@@ -81,8 +78,8 @@ def cli():
     parser_transcribe.add_argument(
         "--compute_type",
         default="int8",
-        choices=["float16", "int8", "float32"],
-        help="Compute type (int8/float16/float32)",
+        choices=["float16", "int8"],
+        help="Compute type (float16/int8)",
     )
 
     args = parser.parse_args()
@@ -131,7 +128,6 @@ def cli():
                 args.compute_type,
                 timestamp,
                 original_file_name,
-                initial_prompt=args.prompt
             )
             print(
                 f"Thank you for using aTrain \nIf you use aTrain in a scientific publication, please cite our paper:\n'Take the aTrain. Introducing an interface for the Accessible Transcription of Interviews'\navailable under: {link('https://www.sciencedirect.com/science/article/pii/S2214635024000066')}"

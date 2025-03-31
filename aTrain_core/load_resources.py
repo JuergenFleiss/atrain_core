@@ -72,9 +72,6 @@ def get_model(
         shutil.rmtree(cache_path)
 
     dir_hash = checksumdir.dirhash(model_path)
-    print(
-        f"Model '{model}' has the hash '{dir_hash}' and has been downloaded to {model_path}"
-    )
     assert_model_hash(
         dir_hash, model, model_info, is_required, models_dir, required_models_dir
     )
