@@ -55,7 +55,7 @@ def cli():
     )
     parser_transcribe.add_argument("audiofile", help="Path to the audio file")
     parser_transcribe.add_argument(
-        "--model", default="large-v3-turbo", help="Model to use for transcription"
+        "--model", default="large-v3", help="Model to use for transcription"
     )
     parser_transcribe.add_argument(
         "--language", default="auto-detect", help="Language of the audio"
