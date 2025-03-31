@@ -38,8 +38,8 @@ dependencies = [
     "onnxruntime==1.18.1",
     "torch==2.2.0+cu121; sys_platform == 'win32'",
     "torch==2.2.0+cu121; sys_platform == 'linux'",
-    "torch==2.2.0; sys_platform == 'darwin'",
-    "checksumdir==1.2.0"
+    "torch==2.2.0; sys_platform == 'darwin'"
+
 ]
 
 [tool.setuptools.packages.find]
