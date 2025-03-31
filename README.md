@@ -14,6 +14,11 @@ aTrain-core also comes as the [aTrain app](https://github.com/JuergenFleiss/aTra
 
 The paper introducing aTrain has been published in the Journal of Behavioral and Experimental Finance. Please cite the published paper if you used aTrain for your research: [Take the aTrain. Introducing an Interface for the Accessible Transcription of Interviews.](https://www.sciencedirect.com/science/article/pii/S2214635024000066)
 
+## Becoming a developer
+Please refer to [Developer wiki page](https://github.com/JuergenFleiss/aTrain/wiki/Development:-Branching,-contributing-and-releases) for the details on how to contribute to the project and other useful information for developers.
+
+
+## About aTrain
 
 aTrain-core offers the following benefits:
 \
