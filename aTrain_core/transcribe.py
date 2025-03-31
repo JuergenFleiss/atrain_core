@@ -1,13 +1,18 @@
 import gc
 import json
+import os
 from importlib.resources import files
-
+from typing import Any, Mapping, Optional, Text
+from multiprocessing import Manager, Process
 import numpy as np
+import yaml
 from faster_whisper import WhisperModel
 from faster_whisper.audio import decode_audio
+from pyannote.audio import Pipeline
+from pyannote.audio.pipelines.utils.hook import ProgressHook
+from pyannote.core.utils.helper import get_class_by_name
 from tqdm import tqdm
-import platform
-
+from .step_estimator import calculate_steps
 from .globals import MODELS_DIR, SAMPLING_RATE
 from .GUI_integration import EventSender
 from .load_resources import get_model
@@ -19,7 +24,62 @@ from .outputs import (
     transform_speakers_results,
     write_logfile,
 )
-from .step_estimator import calculate_steps
+
+
+class CustomPipeline(Pipeline):
+    @classmethod
+    def from_pretrained(cls, model_path, required_models_dir) -> Pipeline:
+        """Constructs a custom pipeline from pre-trained models."""
+        config_yml = os.path.join(required_models_dir, "diarize", "config.yaml")
+        with open(config_yml, "r") as config_file:
+            config = yaml.load(config_file, Loader=yaml.SafeLoader)
+        pipeline_name = config["pipeline"]["name"]
+        Klass = get_class_by_name(
+            pipeline_name, default_module_name="pyannote.pipeline.blocks"
+        )
+        params = config["pipeline"].get("params", {})
+        path_segmentation_model = os.path.join(model_path, "segmentation_pyannote.bin")
+        path_embedding_model = os.path.join(model_path, "embedding_pyannote.bin")
+        params["segmentation"] = path_segmentation_model.replace("\\", "/")
+        params["embedding"] = path_embedding_model.replace("\\", "/")
+        pipeline: Pipeline = Klass(**params)
+        pipeline.instantiate(config["params"])
+        return pipeline
+
+
+class CustomProgressHook(ProgressHook):
+    """A custom progress hook that updates the GUI and prints progress information during processing."""
+
+    def __init__(self, GUI: EventSender, completed_steps, total_steps):
+        super().__init__()
+        self.GUI = GUI
+        self.completed_steps = completed_steps
+        self.total_steps = total_steps
+
+    def __call__(
+        self,
+        step_name: Text,
+        step_artifact: Any,
+        file: Optional[Mapping] = None,
+        total: Optional[int] = None,
+        completed: Optional[int] = None,
+    ):
+        super().__call__(step_name, step_artifact, file, total, completed)
+
+        # self.GUI.task_info(f"{self.step_name}")    # names of sub-steps within speaker detection
+        self.GUI.task_info("Detect Speakers")
+
+        if (
+            self.step_name == "speaker_counting"
+            or self.step_name == "discrete_diarization"
+        ):
+            self.completed_steps += 1
+            self.GUI.progress_info(self.completed_steps, self.total_steps)
+
+        if total is not None and completed is not None:
+            if completed != 0:
+                self.completed_steps += 1
+                self.GUI.progress_info(self.completed_steps, self.total_steps)
 
 
 def transcription_with_progress_bar(transcription_segments, info, GUI: EventSender):
@@ -54,21 +114,54 @@ def _prepare_metadata_creation(language, num_speakers, device, file_id, audio_fi
     try:
         audio_array = decode_audio(audio_file, sampling_rate=SAMPLING_RATE)
     except Exception as e:
-        if platform.system() == "Darwin":
-            write_logfile(
-                f"Error: File has no audio or whitespaces detected in filename: {e}",
-                file_id,
-            )
-            raise Exception(
-                "Please check if there are white spaces in your audio filename and replace them (e.g. with underscores). Check if the file has no audio."
-            )
-        else:
-            write_logfile(f"File has no audio: {e}", file_id)
-            raise Exception("Your file has no audio.")
+        write_logfile(
+            f"File or path invalid: Does file have audio and/or path includes whitespaces? {e}",
+            file_id,
+        )
+        raise Exception(
+            "Check file & path: File either has no audio or the name of the file path or file includes spaces. Please remove or exchange them with underscores."
+        )
     write_logfile("Audio file loaded and decoded", file_id)
     audio_duration = int(len(audio_array) / SAMPLING_RATE)
     write_logfile("Audio duration calculated", file_id)
     return audio_array, audio_duration, device, min_speakers, max_speakers, language
+
+
+# workaround to deal with a termination issue: https://github.com/guillaumekln/faster-whisper/issues/71
+def run_transcription_in_seperate_process(
+    model_path,
+    device,
+    compute_type,
+    audio_array,
+    language,
+    file_id,
+    model,
+    GUI: EventSender,
+    initial_prompt=None,
+):
+    with Manager() as manager:
+        returnList = manager.list([None])
+        p = Process(
+            target=_perform_whisper_transcription,
+            kwargs={
+                "model_path": model_path,
+                "device": device,
+                "compute_type": compute_type,
+                "audio_array": audio_array,
+                "language": language,
+                "file_id": file_id,
+                "model": model,
+                "GUI": GUI,
+                "initial_prompt": initial_prompt,
+                "returnList": returnList,
+            },
+            daemon=True,
+        )  # add return target to end of args list
+        p.start()
+        p.join()
+        p.close()
+        transcript = returnList[0]
+        return transcript
 
 
 def _perform_whisper_transcription(
@@ -81,12 +174,11 @@ def _perform_whisper_transcription(
     model,
     GUI: EventSender,
     initial_prompt=None,
+    returnList=[None],
 ):
-    import torch
-
     transcription_model = WhisperModel(model_path, device, compute_type=compute_type)
 
-    models_config_path = str(files("aTrain_core.models").joinpath("models.json"))
+    models_config_path = str(files("aTrain_core.data").joinpath("models.json"))
     f = open(models_config_path, "r")
     models = json.load(f)
 
@@ -116,11 +208,11 @@ def _perform_whisper_transcription(
         "segments": [named_tuple_to_dict(segment) for segment in transcription_segments]
     }  # wenn man die beiden umdreht also progress bar zuerst damit er schön läuft, dann ist das segments dict leer, sprich es gibt keine transkription
     write_logfile("Transcription successful", file_id)
-
-    del transcription_model
-    gc.collect()
-    torch.cuda.empty_cache()
-    return transcript
+    if device == "cpu":
+        return transcript
+    elif device == "cuda":
+        returnList[0] = transcript
+        os._exit(0)
 
 
 def _perform_pyannote_speaker_diarization(
@@ -133,9 +225,7 @@ def _perform_pyannote_speaker_diarization(
     audio_array,
     transcript,
 ):
-    # We are importing this inside the function to speed up app start up.
     import torch
-    from .pyannote_customizations import CustomPipeline, CustomProgressHook
 
     total_steps = calculate_steps(audio_duration)
     current_step = 0
@@ -220,7 +310,7 @@ def _assign_word_speakers(diarize_df, transcript_result, fill_nearest=False):
 
 
 def _finish_transcription_create_output_files(
-    transcript, speaker_detection, file_id, GUI
+    transcript, speaker_detection, file_id, GUI: EventSender
 ):
     """Create output files after transcription."""
     GUI.task_info("Finish")
@@ -242,11 +332,14 @@ def transcribe(
     timestamp,
     original_audio_filename,
     initial_prompt=None,
-    GUI: EventSender = EventSender(),
+    GUI: EventSender = None,
     required_models_dir=MODELS_DIR,
 ):
     """Transcribes audio file with specified parameters."""
     # import inside function for faster startup times in GUI app
+
+    if GUI is None:
+        GUI = EventSender()  # Initialize only if not provided
 
     GUI.task_info("Prepare")
     write_logfile("Directory created", file_id)
@@ -274,17 +367,34 @@ def transcribe(
     model_path = get_model(model, required_models_dir=required_models_dir)
     write_logfile("Model loaded", file_id)
 
-    transcript = _perform_whisper_transcription(
-        model_path,
-        device,
-        compute_type,
-        audio_array,
-        language,
-        file_id,
-        model,
-        GUI,
-        initial_prompt,
-    )
+    if device == "cuda":
+        print("Transcribing in seperate process")
+        write_logfile("Transcribing in seperate process", file_id)
+        transcript = run_transcription_in_seperate_process(
+            model_path,
+            device,
+            compute_type,
+            audio_array,
+            language,
+            file_id,
+            model,
+            GUI,
+            initial_prompt,
+        )
+    elif device == "cpu":
+        print("Transcribing in same process")
+        write_logfile("Transcribing in same process", file_id)
+        transcript = _perform_whisper_transcription(
+            model_path,
+            device,
+            compute_type,
+            audio_array,
+            language,
+            file_id,
+            model,
+            GUI,
+            initial_prompt,
+        )
 
     if not speaker_detection:
         _finish_transcription_create_output_files(

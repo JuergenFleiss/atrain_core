@@ -6,7 +6,7 @@ from datetime import datetime
 from werkzeug.utils import secure_filename
 
 from .check_inputs import check_inputs_transcribe
-from .globals import TIMESTAMP_FORMAT
+from .globals import TIMESTAMP_FORMAT, MODELS_DIR
 from .load_resources import download_all_models, get_model, remove_model
 from .outputs import (
     create_directory,
@@ -55,7 +55,7 @@ def cli():
     )
     parser_transcribe.add_argument("audiofile", help="Path to the audio file")
     parser_transcribe.add_argument(
-        "--model", default="large-v3-turbo", help="Model to use for transcription"
+        "--model", default="large-v3", help="Model to use for transcription"
     )
     parser_transcribe.add_argument(
         "--language", default="auto-detect", help="Language of the audio"
@@ -70,7 +70,9 @@ def cli():
         "--num_speakers", default="auto-detect", help="Number of speakers"
     )
     parser_transcribe.add_argument(
-        "--prompt", default=None, help="Initial prompt to guide the style of the transcription."
+        "--prompt",
+        default=None,
+        help="Initial prompt to guide the style of the transcription.",
     )
     parser_transcribe.add_argument(
         "--device",
@@ -81,8 +83,8 @@ def cli():
     parser_transcribe.add_argument(
         "--compute_type",
         default="int8",
-        choices=["float16", "int8", "float32"],
-        help="Compute type (int8/float16/float32)",
+        choices=["float16", "int8"],
+        help="Compute type (float16/int8)",
     )
 
     args = parser.parse_args()
@@ -108,9 +110,11 @@ def cli():
 
         # Secure the base name (remove unsafe characters)
         secure_file_base_name = secure_filename(file_base_name)
-        secure_file_base_name = secure_file_base_name.replace(" ", "_")
 
+        # Join the directory path with the secure base name to get the full path
         filename = os.path.join(dir_name, secure_file_base_name)
+        print(f"file name: {filename}")
+        print(f"file type: {type(filename)}")
 
         file_id = create_file_id(filename, timestamp)
         create_directory(file_id)
@@ -121,17 +125,19 @@ def cli():
         try:
             check_inputs_transcribe(filename, args.model, args.language, args.device)
             transcribe(
-                filename,
-                file_id,
-                args.model,
-                args.language,
-                args.speaker_detection,
-                args.num_speakers,
-                args.device,
-                args.compute_type,
-                timestamp,
-                original_file_name,
-                initial_prompt=args.prompt
+                audio_file=filename,
+                file_id=file_id,
+                model=args.model,
+                language=args.language,
+                speaker_detection=args.speaker_detection,
+                num_speakers=args.num_speakers,
+                device=args.device,
+                compute_type=args.compute_type,
+                timestamp=timestamp,
+                original_audio_filename=original_file_name,
+                initial_prompt=args.prompt,
+                GUI=None,
+                required_models_dir=MODELS_DIR,
             )
             print(
                 f"Thank you for using aTrain \nIf you use aTrain in a scientific publication, please cite our paper:\n'Take the aTrain. Introducing an interface for the Accessible Transcription of Interviews'\navailable under: {link('https://www.sciencedirect.com/science/article/pii/S2214635024000066')}"

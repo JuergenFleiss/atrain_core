@@ -1,1 +1,1 @@
-recursive-include aTrain_core/models *
+recursive-include aTrain_core/data *
