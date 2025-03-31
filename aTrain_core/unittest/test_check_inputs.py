@@ -42,7 +42,7 @@ class TestCheckInputsFunctions(unittest.TestCase):
             ),
         ):
             with self.assertRaises(ValueError):
-                check_model("modelC", "en")
+                check_model("modelC", "en")  # Non-existent model
             with self.assertRaises(ValueError):
                 check_model("distil_english", "fr")  # Wrong language for distil model
 
