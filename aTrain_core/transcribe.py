@@ -3,7 +3,7 @@ import json
 import os
 from importlib.resources import files
 from typing import Any, Mapping, Optional, Text
-
+from multiprocessing import Manager, Process
 import numpy as np
 import yaml
 from faster_whisper import WhisperModel
@@ -114,12 +114,54 @@ def _prepare_metadata_creation(language, num_speakers, device, file_id, audio_fi
     try:
         audio_array = decode_audio(audio_file, sampling_rate=SAMPLING_RATE)
     except Exception as e:
-        write_logfile(f"File has no audio: {e}", file_id)
-        raise Exception("Attention: Your file has no audio.")
+        write_logfile(
+            f"File or path invalid: Does file have audio and/or path includes whitespaces? {e}",
+            file_id,
+        )
+        raise Exception(
+            "Check file & path: File either has no audio or the name of the file path or file includes spaces. Please remove or exchange them with underscores."
+        )
     write_logfile("Audio file loaded and decoded", file_id)
     audio_duration = int(len(audio_array) / SAMPLING_RATE)
     write_logfile("Audio duration calculated", file_id)
     return audio_array, audio_duration, device, min_speakers, max_speakers, language
+
+
+# workaround to deal with a termination issue: https://github.com/guillaumekln/faster-whisper/issues/71
+def run_transcription_in_seperate_process(
+    model_path,
+    device,
+    compute_type,
+    audio_array,
+    language,
+    file_id,
+    model,
+    GUI: EventSender,
+    initial_prompt=None,
+):
+    with Manager() as manager:
+        returnList = manager.list([None])
+        p = Process(
+            target=_perform_whisper_transcription,
+            kwargs={
+                "model_path": model_path,
+                "device": device,
+                "compute_type": compute_type,
+                "audio_array": audio_array,
+                "language": language,
+                "file_id": file_id,
+                "model": model,
+                "GUI": GUI,
+                "initial_prompt": initial_prompt,
+                "returnList": returnList,
+            },
+            daemon=True,
+        )  # add return target to end of args list
+        p.start()
+        p.join()
+        p.close()
+        transcript = returnList[0]
+        return transcript
 
 
 def _perform_whisper_transcription(
@@ -131,17 +173,18 @@ def _perform_whisper_transcription(
     file_id,
     model,
     GUI: EventSender,
+    initial_prompt=None,
+    returnList=[None],
 ):
-    import torch
-
     transcription_model = WhisperModel(model_path, device, compute_type=compute_type)
 
-    models_config_path = str(files("aTrain_core.models").joinpath("models.json"))
+    models_config_path = str(files("aTrain_core.data").joinpath("models.json"))
     f = open(models_config_path, "r")
     models = json.load(f)
 
     model_type = models[model]["type"]
     max_new_tokens = None if model_type == "distil" else 128
+    condition_on_previous_text = False if model_type == "distil" else True
 
     write_logfile(f"Transcribing with {model_type} model.", file_id)
 
@@ -153,7 +196,8 @@ def _perform_whisper_transcription(
         language=language,
         max_new_tokens=max_new_tokens,
         no_speech_threshold=0.6,
-        condition_on_previous_text=False,
+        condition_on_previous_text=condition_on_previous_text,
+        initial_prompt=initial_prompt,
     )
 
     transcription_segments = transcription_with_progress_bar(
@@ -164,11 +208,11 @@ def _perform_whisper_transcription(
         "segments": [named_tuple_to_dict(segment) for segment in transcription_segments]
     }  # wenn man die beiden umdreht also progress bar zuerst damit er schön läuft, dann ist das segments dict leer, sprich es gibt keine transkription
     write_logfile("Transcription successful", file_id)
-
-    del transcription_model
-    gc.collect()
-    torch.cuda.empty_cache()
-    return transcript
+    if device == "cpu":
+        return transcript
+    elif device == "cuda":
+        returnList[0] = transcript
+        os._exit(0)
 
 
 def _perform_pyannote_speaker_diarization(
@@ -266,7 +310,7 @@ def _assign_word_speakers(diarize_df, transcript_result, fill_nearest=False):
 
 
 def _finish_transcription_create_output_files(
-    transcript, speaker_detection, file_id, GUI
+    transcript, speaker_detection, file_id, GUI: EventSender
 ):
     """Create output files after transcription."""
     GUI.task_info("Finish")
@@ -287,11 +331,15 @@ def transcribe(
     compute_type,
     timestamp,
     original_audio_filename,
-    GUI: EventSender = EventSender(),
+    initial_prompt=None,
+    GUI: EventSender = None,
     required_models_dir=MODELS_DIR,
 ):
     """Transcribes audio file with specified parameters."""
     # import inside function for faster startup times in GUI app
+
+    if GUI is None:
+        GUI = EventSender()  # Initialize only if not provided
 
     GUI.task_info("Prepare")
     write_logfile("Directory created", file_id)
@@ -319,9 +367,34 @@ def transcribe(
     model_path = get_model(model, required_models_dir=required_models_dir)
     write_logfile("Model loaded", file_id)
 
-    transcript = _perform_whisper_transcription(
-        model_path, device, compute_type, audio_array, language, file_id, model, GUI
-    )
+    if device == "cuda":
+        print("Transcribing in seperate process")
+        write_logfile("Transcribing in seperate process", file_id)
+        transcript = run_transcription_in_seperate_process(
+            model_path,
+            device,
+            compute_type,
+            audio_array,
+            language,
+            file_id,
+            model,
+            GUI,
+            initial_prompt,
+        )
+    elif device == "cpu":
+        print("Transcribing in same process")
+        write_logfile("Transcribing in same process", file_id)
+        transcript = _perform_whisper_transcription(
+            model_path,
+            device,
+            compute_type,
+            audio_array,
+            language,
+            file_id,
+            model,
+            GUI,
+            initial_prompt,
+        )
 
     if not speaker_detection:
         _finish_transcription_create_output_files(
