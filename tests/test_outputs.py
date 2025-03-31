@@ -59,25 +59,25 @@ class TestOutputs(unittest.TestCase):
         self.assertEqual(mock_create_txt_file.call_count, 3)
         mock_create_srt_file.assert_called_once_with(result, file_id)
 
-    # PROBLEM: The test fails because the patch for the TRANSCRIPT_DIR is not working.
-    # @patch("builtins.open", new_callable=mock_open)
-    # @patch("aTrain_core.globals.TRANSCRIPT_DIR", new="test_transcript_dir")
-    # def test_create_json_file(self, mock_open):
-    #     result = {"test": "data"}
-    #     file_id = "mock_file_id"
+    @patch("builtins.open", new_callable=mock_open)
+    @patch("aTrain_core.globals.TRANSCRIPT_DIR", new="test_transcript_dir")
+    def test_create_json_file(self, mock_open):
+        result = {"test": "data"}
+        file_id = "mock_file_id"
 
-    #     with patch("aTrain_core.globals.TRANSCRIPT_DIR", self.test_dir):
-    #         create_json_file(result, file_id)
+        # Ensure TRANSCRIPT_DIR is mocked correctly
+        with patch("aTrain_core.globals.TRANSCRIPT_DIR", self.test_dir):
+            create_json_file(result, file_id)
 
-    #         mock_open.assert_called_once_with(
-    #             os.path.join(self.test_dir, file_id, "transcription.json"),
-    #             "w",
-    #             encoding="utf-8",
-    #         )
+            mock_open.assert_called_once_with(
+                os.path.join(self.test_dir, file_id, "transcription.json"),
+                "w",
+                encoding="utf-8",
+            )
 
-    #         mock_open().write.assert_called_once_with(
-    #             json.dumps(result, ensure_ascii=False)
-    #         )
+            mock_open().write.assert_called_once_with(
+                json.dumps(result, ensure_ascii=False)
+            )
 
     @patch("builtins.open", new_callable=unittest.mock.mock_open)
     def test_create_txt_file(self, mock_open):
@@ -179,6 +179,13 @@ class TestOutputs(unittest.TestCase):
         )
         add_processing_time_to_metadata(file_id)
         mock_open.assert_called()
+
+    @patch("shutil.rmtree")
+    def test_delete_transcription(self, mock_rmtree):
+        file_id = "mock_file_id"
+        create_directory(file_id)  # Create directory for deletion test
+        delete_transcription(file_id)
+        mock_rmtree.assert_called_once()
 
 
 if __name__ == "__main__":
