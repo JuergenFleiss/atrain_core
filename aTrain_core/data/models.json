@@ -71,7 +71,7 @@
     },
     "large-norwegian": {
         "repo_id": "aTrain-core/nb-faster-whisper-large",
-        "revision": "ebf67abcd66b23a6952eb724e9b909aa500c161a",
+        "revision": "0c44886c8864cc9cf90d8726070ab392984c69db",
         "type": "regular",
         "language": "no",
         "repo_size": 6179162862,
