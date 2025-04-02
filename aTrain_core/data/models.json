@@ -68,5 +68,13 @@
         "language": "en",
         "repo_size": 1516112610,
         "repo_size_human": "1.51 GB"
+    },
+    "large-norwegian": {
+        "repo_id": "aTrain-core/nb-faster-whisper-large",
+        "revision": "ebf67abcd66b23a6952eb724e9b909aa500c161a",
+        "type": "regular",
+        "language": "no",
+        "repo_size": 6179162862,
+        "repo_size_human": "6GB"
     }
 }
