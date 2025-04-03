@@ -77,7 +77,8 @@
         "type": "regular",
         "languages": [
             "no",
-            "nn"
+            "nn",
+            "en"
         ],
         "repo_size": 6179162862,
         "repo_size_human": "6GB"
