@@ -60,7 +60,12 @@ def check_model(model, language):
         )
 
     model_config: dict = all_model_configs[model]
-    model_languages: list = model_config["languages"]
+
+    if "languages" in model_config.keys():
+        model_languages: list = model_config["languages"]
+    else:
+        model_languages = load_languages().keys()
+
     if language not in model_languages:
         raise ValueError(
             f"Language input wrong or unspecified. This model is only available in {model_languages} and has to be specified."
