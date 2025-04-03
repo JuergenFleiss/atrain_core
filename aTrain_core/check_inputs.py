@@ -50,13 +50,13 @@ def check_model(model, language):
 
     all_model_configs = load_model_config_file()
     all_models = set(all_model_configs.keys())
-    all_transcription_models = all_models.remove("diarize")
+    all_models.remove("diarize")
 
-    model_available = model in all_transcription_models
+    model_available = model in all_models
 
     if not model_available:
         raise ValueError(
-            f"Model {model} is not available. These are the available models: {all_transcription_models}"
+            f"Model {model} is not available. These are the available models: {all_models}"
         )
 
     model_config: dict = all_model_configs[model]
