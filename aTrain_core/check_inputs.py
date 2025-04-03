@@ -47,7 +47,6 @@ def check_device(device):
 
 def check_model(model, language):
     """Check if the provided model and language are valid for transcription."""
-    # better to look into models.json and check if available
 
     all_model_configs = load_model_config_file()
     all_models = set(all_model_configs.keys())
