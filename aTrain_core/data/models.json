@@ -65,7 +65,9 @@
         "repo_id": "aTrain-core/faster-distil-whisper-large-v2",
         "revision": "bcbc5787cacc46911e38af69b7f32adc48512983",
         "type": "distil",
-        "language": "en",
+        "languages": [
+            "en"
+        ],
         "repo_size": 1516112610,
         "repo_size_human": "1.51 GB"
     },
@@ -73,7 +75,10 @@
         "repo_id": "aTrain-core/nb-faster-whisper-large",
         "revision": "0c44886c8864cc9cf90d8726070ab392984c69db",
         "type": "regular",
-        "language": "no",
+        "languages": [
+            "no",
+            "nn"
+        ],
         "repo_size": 6179162862,
         "repo_size_human": "6GB"
     }
