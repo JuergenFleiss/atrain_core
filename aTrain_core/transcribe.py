@@ -1,9 +1,8 @@
 import gc
-import json
 import os
-from importlib.resources import files
 from typing import Any, Mapping, Optional, Text
 from multiprocessing import Manager, Process
+from multiprocessing.managers import DictProxy
 import numpy as np
 import yaml
 from faster_whisper import WhisperModel
@@ -140,7 +139,7 @@ def run_transcription_in_seperate_process(
     initial_prompt=None,
 ):
     with Manager() as manager:
-        returnList = manager.list([None])
+        returnDict = manager.dict()
         p = Process(
             target=_perform_whisper_transcription,
             kwargs={
@@ -153,15 +152,20 @@ def run_transcription_in_seperate_process(
                 "model": model,
                 "GUI": GUI,
                 "initial_prompt": initial_prompt,
-                "returnList": returnList,
+                "returnDict": returnDict,
             },
             daemon=True,
         )  # add return target to end of args list
         p.start()
         p.join()
         p.close()
-        transcript = returnList[0]
-        return transcript
+
+        if "error" in returnDict.keys():
+            error: Exception = returnDict["error"]
+            raise error.with_traceback(error.__traceback__)
+        else:
+            transcript = returnDict["transcript"]
+            return transcript
 
 
 def _perform_whisper_transcription(
@@ -174,7 +178,7 @@ def _perform_whisper_transcription(
     model,
     GUI: EventSender,
     initial_prompt=None,
-    returnList=[None],
+    returnDict: DictProxy | dict = {},
 ):
     try:
         transcription_model = WhisperModel(
@@ -213,10 +217,12 @@ def _perform_whisper_transcription(
         if device == "cpu":
             return transcript
         elif device == "cuda":
-            returnList[0] = transcript
+            returnDict["transcript"] = transcript
             os._exit(0)
-    except:
-        pass
+
+    # ToDo Catch specific Exceptions and handle them accordingly
+    except Exception as error:
+        returnDict["error"] = error
 
 
 def _perform_pyannote_speaker_diarization(
