@@ -5,6 +5,7 @@ from multiprocessing import Manager, Process
 from multiprocessing.managers import DictProxy
 import numpy as np
 import yaml
+import sys
 from faster_whisper import WhisperModel
 from faster_whisper.audio import decode_audio
 from pyannote.audio import Pipeline
@@ -161,8 +162,9 @@ def run_transcription_in_seperate_process(
         p.close()
 
         if "error" in returnDict.keys():
-            error: Exception = returnDict["error"]
-            raise error.with_traceback(error.__traceback__)
+            error: Exception
+            error, traceback = returnDict["error"]
+            raise error.with_traceback(traceback)
         else:
             transcript = returnDict["transcript"]
             return transcript
@@ -221,8 +223,10 @@ def _perform_whisper_transcription(
             os._exit(0)
 
     # ToDo Catch specific Exceptions and handle them accordingly
-    except Exception as error:
-        returnDict["error"] = error
+    except Exception:
+        _, error, traceback = sys.exc_info()
+        returnDict["error"] = (error, traceback)
+        raise error.with_traceback(traceback)
 
 
 def _perform_pyannote_speaker_diarization(
