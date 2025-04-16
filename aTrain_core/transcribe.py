@@ -15,7 +15,7 @@ from tqdm import tqdm
 from .step_estimator import calculate_steps
 from .globals import MODELS_DIR, SAMPLING_RATE
 from .GUI_integration import EventSender
-from .load_resources import get_model
+from .load_resources import get_model, load_model_config_file
 from .outputs import (
     add_processing_time_to_metadata,
     create_metadata,
@@ -178,10 +178,7 @@ def _perform_whisper_transcription(
 ):
     transcription_model = WhisperModel(model_path, device, compute_type=compute_type)
 
-    models_config_path = str(files("aTrain_core.data").joinpath("models.json"))
-    f = open(models_config_path, "r")
-    models = json.load(f)
-
+    models = load_model_config_file()
     model_type = models[model]["type"]
     max_new_tokens = None if model_type == "distil" else 128
     condition_on_previous_text = False if model_type == "distil" else True
