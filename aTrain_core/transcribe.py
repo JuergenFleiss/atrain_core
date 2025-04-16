@@ -176,40 +176,47 @@ def _perform_whisper_transcription(
     initial_prompt=None,
     returnList=[None],
 ):
-    transcription_model = WhisperModel(model_path, device, compute_type=compute_type)
+    try:
+        transcription_model = WhisperModel(
+            model_path, device, compute_type=compute_type
+        )
 
-    models = load_model_config_file()
-    model_type = models[model]["type"]
-    max_new_tokens = None if model_type == "distil" else 128
-    condition_on_previous_text = False if model_type == "distil" else True
+        models = load_model_config_file()
+        model_type = models[model]["type"]
+        max_new_tokens = None if model_type == "distil" else 128
+        condition_on_previous_text = False if model_type == "distil" else True
 
-    write_logfile(f"Transcribing with {model_type} model.", file_id)
+        write_logfile(f"Transcribing with {model_type} model.", file_id)
 
-    transcription_segments, info = transcription_model.transcribe(
-        audio=audio_array,
-        vad_filter=True,
-        beam_size=5,
-        word_timestamps=True,
-        language=language,
-        max_new_tokens=max_new_tokens,
-        no_speech_threshold=0.6,
-        condition_on_previous_text=condition_on_previous_text,
-        initial_prompt=initial_prompt,
-    )
+        transcription_segments, info = transcription_model.transcribe(
+            audio=audio_array,
+            vad_filter=True,
+            beam_size=5,
+            word_timestamps=True,
+            language=language,
+            max_new_tokens=max_new_tokens,
+            no_speech_threshold=0.6,
+            condition_on_previous_text=condition_on_previous_text,
+            initial_prompt=initial_prompt,
+        )
 
-    transcription_segments = transcription_with_progress_bar(
-        transcription_segments, info, GUI
-    )
+        transcription_segments = transcription_with_progress_bar(
+            transcription_segments, info, GUI
+        )
 
-    transcript = {
-        "segments": [named_tuple_to_dict(segment) for segment in transcription_segments]
-    }  # wenn man die beiden umdreht also progress bar zuerst damit er schön läuft, dann ist das segments dict leer, sprich es gibt keine transkription
-    write_logfile("Transcription successful", file_id)
-    if device == "cpu":
-        return transcript
-    elif device == "cuda":
-        returnList[0] = transcript
-        os._exit(0)
+        transcript = {
+            "segments": [
+                named_tuple_to_dict(segment) for segment in transcription_segments
+            ]
+        }
+        write_logfile("Transcription successful", file_id)
+        if device == "cpu":
+            return transcript
+        elif device == "cuda":
+            returnList[0] = transcript
+            os._exit(0)
+    except:
+        pass
 
 
 def _perform_pyannote_speaker_diarization(
