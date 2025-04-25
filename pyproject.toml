@@ -7,16 +7,16 @@ name = "aTrain_core"
 description = "aTrain_core is a command-line tool for automatically transcribing speech recordings utilizing state-of-the-art machine learning models without uploading any data."
 
 authors = [
-  {name = "Armin Haberl", email = "armin.haberl@uni-graz.at"},
-  {name = "Jürgen Fleiß", email = "juergen.fleiss@uni-graz.at"},
-  {name = "Dominik Kowald", email = "dkowald@know-center.at"},
-  {name = "Stefan Thalmann", email = "stefan.thalmann@uni-graz.at"}
+  { name = "Armin Haberl", email = "armin.haberl@uni-graz.at" },
+  { name = "Jürgen Fleiß", email = "juergen.fleiss@uni-graz.at" },
+  { name = "Dominik Kowald", email = "dkowald@know-center.at" },
+  { name = "Stefan Thalmann", email = "stefan.thalmann@uni-graz.at" },
 ]
 
 maintainers = [
-  {name = "Armin Haberl", email = "armin.haberl@uni-graz.at"},
-  {name = "Jürgen Fleiß", email = "juergen.fleiss@uni-graz.at"},
-  {name = "Andrea Forster", email = "andrea.forster@uni-graz.at"}
+  { name = "Armin Haberl", email = "armin.haberl@uni-graz.at" },
+  { name = "Jürgen Fleiß", email = "juergen.fleiss@uni-graz.at" },
+  { name = "Andrea Forster", email = "andrea.forster@uni-graz.at" },
 ]
 
 dynamic = ["version"]
@@ -25,20 +25,14 @@ license = { file = "LICENSE" }
 requires-python = ">=3.10"
 
 dependencies = [
-    "torchaudio==2.2.0",
-    "faster-whisper==1.0.2",
-    "transformers",
-    "ctranslate2==4.2.1",
-    "ffmpeg-python>=0.2",
-    "pandas",
-    "pyannote.audio==3.2.0",
-    "huggingface-hub==0.24.5",
-    "numpy==1.26.4",
-    "werkzeug==3.0.3",
-    "onnxruntime==1.18.1",
-    "torch==2.2.0+cu121; sys_platform == 'win32'",
-    "torch==2.2.0+cu121; sys_platform == 'linux'",
-    "torch==2.2.0; sys_platform == 'darwin'"
+  "faster-whisper==1.0.2",
+  "pandas",
+  "pyannote.audio==3.2.0",
+  "numpy==1.26.4",
+  "werkzeug==3.0.3",
+  "torch==2.2.0+cu121; sys_platform == 'win32'",
+  "torch==2.2.0+cu121; sys_platform == 'linux'",
+  "torch==2.2.0; sys_platform == 'darwin'",
 
 ]
 
@@ -50,4 +44,4 @@ include = ["aTrain_core*"]
 aTrain_core = "aTrain_core:cli"
 
 [tool.setuptools.dynamic]
-version = {attr = "aTrain_core.version.__version__"}
+version = { attr = "aTrain_core.version.__version__" }
