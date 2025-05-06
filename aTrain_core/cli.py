@@ -83,8 +83,8 @@ def cli():
     parser_transcribe.add_argument(
         "--compute_type",
         default="int8",
-        choices=["float16", "int8"],
-        help="Compute type (float16/int8)",
+        choices=["float16", "int8", "float32"],
+        help="Compute type (float16/float32/int8)",
     )
 
     args = parser.parse_args()
