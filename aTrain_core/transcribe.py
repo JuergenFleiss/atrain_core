@@ -1,9 +1,8 @@
 import gc
-import json
 import os
-from importlib.resources import files
 from typing import Any, Mapping, Optional, Text
 from multiprocessing import Manager, Process
+from multiprocessing.managers import DictProxy
 import numpy as np
 import yaml
 from faster_whisper import WhisperModel
@@ -15,7 +14,7 @@ from tqdm import tqdm
 from .step_estimator import calculate_steps
 from .globals import MODELS_DIR, SAMPLING_RATE
 from .GUI_integration import EventSender
-from .load_resources import get_model
+from .load_resources import get_model, load_model_config_file
 from .outputs import (
     add_processing_time_to_metadata,
     create_metadata,
@@ -140,7 +139,7 @@ def run_transcription_in_seperate_process(
     initial_prompt=None,
 ):
     with Manager() as manager:
-        returnList = manager.list([None])
+        returnDict = manager.dict()
         p = Process(
             target=_perform_whisper_transcription,
             kwargs={
@@ -153,15 +152,20 @@ def run_transcription_in_seperate_process(
                 "model": model,
                 "GUI": GUI,
                 "initial_prompt": initial_prompt,
-                "returnList": returnList,
+                "returnDict": returnDict,
             },
             daemon=True,
         )  # add return target to end of args list
         p.start()
         p.join()
         p.close()
-        transcript = returnList[0]
-        return transcript
+
+        if "error" in returnDict.keys():
+            error: Exception = returnDict["error"]
+            raise error
+        else:
+            transcript = returnDict["transcript"]
+            return transcript
 
 
 def _perform_whisper_transcription(
@@ -174,45 +178,52 @@ def _perform_whisper_transcription(
     model,
     GUI: EventSender,
     initial_prompt=None,
-    returnList=[None],
+    returnDict: DictProxy | dict = {},
 ):
-    transcription_model = WhisperModel(model_path, device, compute_type=compute_type)
+    try:
+        transcription_model = WhisperModel(
+            model_path, device, compute_type=compute_type
+        )
 
-    models_config_path = str(files("aTrain_core.data").joinpath("models.json"))
-    f = open(models_config_path, "r")
-    models = json.load(f)
+        models = load_model_config_file()
+        model_type = models[model]["type"]
+        max_new_tokens = None if model_type == "distil" else 128
+        condition_on_previous_text = False if model_type == "distil" else True
 
-    model_type = models[model]["type"]
-    max_new_tokens = None if model_type == "distil" else 128
-    condition_on_previous_text = False if model_type == "distil" else True
+        write_logfile(f"Transcribing with {model_type} model.", file_id)
 
-    write_logfile(f"Transcribing with {model_type} model.", file_id)
+        transcription_segments, info = transcription_model.transcribe(
+            audio=audio_array,
+            vad_filter=True,
+            beam_size=5,
+            word_timestamps=True,
+            language=language,
+            max_new_tokens=max_new_tokens,
+            no_speech_threshold=0.6,
+            condition_on_previous_text=condition_on_previous_text,
+            initial_prompt=initial_prompt,
+        )
 
-    transcription_segments, info = transcription_model.transcribe(
-        audio=audio_array,
-        vad_filter=True,
-        beam_size=5,
-        word_timestamps=True,
-        language=language,
-        max_new_tokens=max_new_tokens,
-        no_speech_threshold=0.6,
-        condition_on_previous_text=condition_on_previous_text,
-        initial_prompt=initial_prompt,
-    )
+        transcription_segments = transcription_with_progress_bar(
+            transcription_segments, info, GUI
+        )
 
-    transcription_segments = transcription_with_progress_bar(
-        transcription_segments, info, GUI
-    )
+        transcript = {
+            "segments": [
+                named_tuple_to_dict(segment) for segment in transcription_segments
+            ]
+        }
+        write_logfile("Transcription successful", file_id)
+        if device == "cpu":
+            return transcript
+        elif device == "cuda":
+            returnDict["transcript"] = transcript
+            os._exit(0)
 
-    transcript = {
-        "segments": [named_tuple_to_dict(segment) for segment in transcription_segments]
-    }  # wenn man die beiden umdreht also progress bar zuerst damit er schön läuft, dann ist das segments dict leer, sprich es gibt keine transkription
-    write_logfile("Transcription successful", file_id)
-    if device == "cpu":
-        return transcript
-    elif device == "cuda":
-        returnList[0] = transcript
-        os._exit(0)
+    # ToDo Catch specific Exceptions and handle them accordingly
+    except Exception as error:
+        returnDict["error"] = error
+        raise error
 
 
 def _perform_pyannote_speaker_diarization(

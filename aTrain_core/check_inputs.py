@@ -1,6 +1,7 @@
 import json
 import os
 from importlib.resources import files
+from .load_resources import load_model_config_file
 
 
 def check_inputs_transcribe(file, model, language, device):
@@ -46,29 +47,31 @@ def check_device(device):
 
 def check_model(model, language):
     """Check if the provided model and language are valid for transcription."""
-    # better to look into models.json and check if available
-    models_config_path = str(files("aTrain_core.data").joinpath("models.json"))
-    f = open(models_config_path, "r")
-    models = json.load(f)
-    available_models = []
-    for key in models.keys():
-        available_models.append(key)
 
-    if model not in available_models:
+    all_model_configs = load_model_config_file()
+    all_models = set(all_model_configs.keys())
+    all_models.remove("diarize")
+
+    model_available = model in all_models
+
+    if not model_available:
         raise ValueError(
-            f"Model {model} is not available. These are the available models: {available_models} (Note: model 'diarize' is for speaker detection only)"
+            f"Model {model} is not available. These are the available models: {all_models}"
         )
 
-    if models[model]["type"] == "regular":
-        return model in available_models
+    model_config: dict = all_model_configs[model]
 
-    elif models[model]["type"] == "distil":
-        if language != models[model]["language"]:
-            raise ValueError(
-                f"Language input wrong or unspecified. This distil model is only available in {models[model]['language']} and has to be specified."
-            )
-        else:
-            return model in available_models
+    if "languages" in model_config.keys():
+        model_languages: list = model_config["languages"]
+    else:
+        model_languages = load_languages().keys()
+
+    if language not in model_languages:
+        raise ValueError(
+            f"Language input wrong or unspecified. This model is only available in {model_languages} and has to be specified."
+        )
+
+    return model_available
 
 
 def load_languages() -> dict:
