@@ -2,6 +2,18 @@ import json
 import os
 from importlib.resources import files
 from .load_resources import load_model_config_file
+from enum import StrEnum, auto
+
+
+class Device(StrEnum):
+    CPU = auto()
+    CUDA = auto()
+
+
+class ComputeType(StrEnum):
+    INT8 = auto()
+    FLOAT16 = auto()
+    FLOAT32 = auto()
 
 
 def check_inputs_transcribe(file, model, language, device):
