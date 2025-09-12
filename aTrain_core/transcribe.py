@@ -1,5 +1,7 @@
 import gc
 import os
+from datetime import datetime
+from pathlib import Path
 from typing import Any, Mapping, Optional, Text
 from multiprocessing import Manager, Process
 from multiprocessing.managers import DictProxy
@@ -12,16 +14,19 @@ from pyannote.audio.pipelines.utils.hook import ProgressHook
 from pyannote.core.utils.helper import get_class_by_name
 from tqdm import tqdm
 from .step_estimator import calculate_steps
-from .globals import MODELS_DIR, SAMPLING_RATE
+from aTrain_core.globals import MODELS_DIR, SAMPLING_RATE, TIMESTAMP_FORMAT
+from werkzeug.utils import secure_filename
 from .GUI_integration import EventSender
 from .load_resources import get_model, load_model_config_file
-from .outputs import (
+from aTrain_core.outputs import (
     add_processing_time_to_metadata,
     create_metadata,
     create_output_files,
     named_tuple_to_dict,
     transform_speakers_results,
     write_logfile,
+    create_file_id,
+    create_directory,
 )
 
 
@@ -79,6 +84,15 @@ class CustomProgressHook(ProgressHook):
             if completed != 0:
                 self.completed_steps += 1
                 self.GUI.progress_info(self.completed_steps, self.total_steps)
+
+
+def prepare_transcription(file: Path) -> tuple[Path, str, str]:
+    timestamp = datetime.now().strftime(TIMESTAMP_FORMAT)
+    file = file.with_name(secure_filename(file.name))
+    file_id = create_file_id(file, timestamp)
+    create_directory(file_id)
+    write_logfile(f"File ID created: {file_id}", file_id)
+    return file, file_id, timestamp
 
 
 def transcription_with_progress_bar(transcription_segments, info, GUI: EventSender):
