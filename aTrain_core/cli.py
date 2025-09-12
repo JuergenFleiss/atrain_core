@@ -16,32 +16,19 @@ from aTrain_core.transcribe import prepare_transcription
 from aTrain_core.transcribe import transcribe as _transcribe
 
 FILE_HELP = "Audio file to be transcribed"
-
-MODEL_DEFAULT = "large-v3-turbo"
 MODEL_HELP = "Model used to transcribe"
-
 LANGUAGE_HELP = "Language of the audio"
-LANGUAGE_DEFAULT = "auto-detect"
-
 DIARIZE_HELP = "Enable speaker detection"
-DIARIZE_DEFAULT = False
-
 SPEAKER_HELP = "Number of Speakers. Use '0' to let aTrain auto-detect speaker number."
-SPEAKER_DEFAULT = 0
-
 PROMPT_HELP = "Initial prompt passed to model"
-PROMPT_DEFAULT = None
-
 DEVICE_HELP = "Hardware used to transcribe"
-DEVICE_DEFAULT = Device.CPU
-
 COMPUTE_HELP = "Data type used in computations"
-COMPUTE_DEFAULT = ComputeType.INT8
 
 FINISHED_TEXT = """Thank you for using aTrain
 If you use aTrain in a scientific publication, please cite our paper:
 'Take the aTrain. Introducing an interface for the Accessible Transcription of Interviews'
 available under: https://doi.org/10.1016/j.jbef.2024.100891"""
+
 
 cli = Typer(help="CLI for aTrain_core")
 
@@ -49,13 +36,13 @@ cli = Typer(help="CLI for aTrain_core")
 @cli.command()
 def transcribe(
     file: Annotated[Path, Argument(help=FILE_HELP)],
-    model: Annotated[str, Option(help=MODEL_HELP)] = MODEL_DEFAULT,
-    language: Annotated[str, Option(help=LANGUAGE_HELP)] = LANGUAGE_DEFAULT,
-    prompt: Annotated[str, Option(help=PROMPT_HELP)] = PROMPT_DEFAULT,
-    speaker_detection: Annotated[bool, Option(help=DIARIZE_HELP)] = DIARIZE_DEFAULT,
-    num_speakers: Annotated[int, Option(help=SPEAKER_HELP)] = SPEAKER_DEFAULT,
-    device: Annotated[Device, Option(help=DEVICE_HELP)] = DEVICE_DEFAULT,
-    compute_type: Annotated[ComputeType, Option(help=COMPUTE_HELP)] = COMPUTE_DEFAULT,
+    model: Annotated[str, Option(help=MODEL_HELP)] = "large-v3-turbo",
+    language: Annotated[str, Option(help=LANGUAGE_HELP)] = "auto-detect",
+    prompt: Annotated[str, Option(help=PROMPT_HELP)] = None,
+    speaker_detection: Annotated[bool, Option(help=DIARIZE_HELP)] = False,
+    num_speakers: Annotated[int, Option(help=SPEAKER_HELP)] = 0,
+    device: Annotated[Device, Option(help=DEVICE_HELP)] = Device.CPU,
+    compute_type: Annotated[ComputeType, Option(help=COMPUTE_HELP)] = ComputeType.INT8,
 ):
     """Start transcription process for an audio file"""
     file, file_id, timestamp = prepare_transcription(file=file)
