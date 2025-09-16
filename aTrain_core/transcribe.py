@@ -85,6 +85,7 @@ class CustomProgressHook(ProgressHook):
             if completed != 0:
                 self.completed_steps += 1
                 self._progress["current"] = self.completed_steps
+                self._progress["total"] = self.total_steps
 
 
 def prepare_transcription(file: Path) -> tuple[Path, str, str]:
