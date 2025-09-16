@@ -3,22 +3,22 @@ import os
 import shutil
 from functools import partial
 from importlib.resources import files
+from multiprocessing.managers import DictProxy
 
 from huggingface_hub import file_download, snapshot_download
 from tqdm.auto import tqdm
 
 from .globals import MODELS_DIR, REQUIRED_MODELS
-from .GUI_integration import EventSender
 
 
 class custom_tqdm(tqdm):
-    def __init__(self, GUI: EventSender, total: float, *args, **kwargs):
-        self.GUI = GUI
+    def __init__(self, progress: DictProxy, total: float, *args, **kwargs):
+        self.progress = progress
         super().__init__(total=total, *args, **kwargs)
 
     def update(self, n=1):
         current = self.n + n
-        self.GUI.progress_info(current, self.total)
+        self.progress["current"] = current
         super().update(n)
 
 
@@ -29,11 +29,14 @@ def download_all_models():
         get_model(model)
 
 
-def download_model(model_path: str, model_info: dict, GUI: EventSender | None = None):
-    if GUI:
+def download_model(
+    model_path: str, model_info: dict, progress: DictProxy | None = None
+):
+    if progress:
         # Monkey patching custom tqdm bar into the huggingface snapshot download
         repo_size = model_info["repo_size"]
-        tqdm_bar = custom_tqdm(total=repo_size, GUI=GUI)
+        progress["total"] = repo_size
+        tqdm_bar = custom_tqdm(total=repo_size, progress=progress)
         file_download.http_get = partial(file_download.http_get, _tqdm_bar=tqdm_bar)
 
     snapshot_download(
@@ -47,7 +50,7 @@ def download_model(model_path: str, model_info: dict, GUI: EventSender | None = 
 
 def get_model(
     model: str,
-    GUI: EventSender | None = None,
+    progress: DictProxy | None = None,
     models_dir=MODELS_DIR,
     required_models_dir=MODELS_DIR,
 ) -> str:
@@ -57,7 +60,7 @@ def get_model(
     models_dir = required_models_dir if model in REQUIRED_MODELS else models_dir
     model_path = os.path.join(models_dir, model)
     if not os.path.exists(model_path):
-        download_model(model_path, model_info, GUI)
+        download_model(model_path, model_info, progress)
     return model_path
 
 

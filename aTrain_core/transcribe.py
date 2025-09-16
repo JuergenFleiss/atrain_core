@@ -16,7 +16,7 @@ from tqdm import tqdm
 from .step_estimator import calculate_steps
 from aTrain_core.globals import MODELS_DIR, SAMPLING_RATE, TIMESTAMP_FORMAT
 from werkzeug.utils import secure_filename
-from .GUI_integration import EventSender
+
 from .load_resources import get_model, load_model_config_file
 from aTrain_core.outputs import (
     add_processing_time_to_metadata,
@@ -54,9 +54,9 @@ class CustomPipeline(Pipeline):
 class CustomProgressHook(ProgressHook):
     """A custom progress hook that updates the GUI and prints progress information during processing."""
 
-    def __init__(self, GUI: EventSender, completed_steps, total_steps):
+    def __init__(self, progress: DictProxy, completed_steps, total_steps):
         super().__init__()
-        self.GUI = GUI
+        self._progress = progress
         self.completed_steps = completed_steps
         self.total_steps = total_steps
 
@@ -71,19 +71,20 @@ class CustomProgressHook(ProgressHook):
         super().__call__(step_name, step_artifact, file, total, completed)
 
         # self.GUI.task_info(f"{self.step_name}")    # names of sub-steps within speaker detection
-        self.GUI.task_info("Detect Speakers")
+        self._progress["task"] = "Detect Speakers"
 
         if (
             self.step_name == "speaker_counting"
             or self.step_name == "discrete_diarization"
         ):
             self.completed_steps += 1
-            self.GUI.progress_info(self.completed_steps, self.total_steps)
+            self._progress["current"] = self.completed_steps
+            self._progress["total"] = self.total_steps
 
         if total is not None and completed is not None:
             if completed != 0:
                 self.completed_steps += 1
-                self.GUI.progress_info(self.completed_steps, self.total_steps)
+                self._progress["current"] = self.completed_steps
 
 
 def prepare_transcription(file: Path) -> tuple[Path, str, str]:
@@ -95,7 +96,7 @@ def prepare_transcription(file: Path) -> tuple[Path, str, str]:
     return file, file_id, timestamp
 
 
-def transcription_with_progress_bar(transcription_segments, info, GUI: EventSender):
+def transcription_with_progress_bar(transcription_segments, info, progress: DictProxy):
     """Transcribes audio segments with progress bar."""
     total_duration = round(info.duration, 2)
     timestamps = 0.0  # to get the current segments
@@ -104,10 +105,11 @@ def transcription_with_progress_bar(transcription_segments, info, GUI: EventSend
     with tqdm(
         total=total_duration, unit=" audio seconds", desc="Transcribing with Whisper"
     ) as pbar:
-        GUI.task_info("Transcribe")
-        for nr, segment in enumerate(transcription_segments):
+        progress["task"] = "Transcribe"
+        for segment in transcription_segments:
             transcription_segments_new.append(segment)
-            GUI.progress_info(segment.end, total_duration)
+            progress["current"] = segment.end
+            progress["total"] = total_duration
             pbar.update(segment.end - timestamps)
             timestamps = segment.end
         if timestamps < info.duration:  # silence at the end of the audio
@@ -149,7 +151,7 @@ def run_transcription_in_seperate_process(
     language,
     file_id,
     model,
-    GUI: EventSender,
+    progress: DictProxy,
     initial_prompt=None,
 ):
     with Manager() as manager:
@@ -164,7 +166,7 @@ def run_transcription_in_seperate_process(
                 "language": language,
                 "file_id": file_id,
                 "model": model,
-                "GUI": GUI,
+                "progress": progress,
                 "initial_prompt": initial_prompt,
                 "returnDict": returnDict,
             },
@@ -190,7 +192,7 @@ def _perform_whisper_transcription(
     language,
     file_id,
     model,
-    GUI: EventSender,
+    progress: DictProxy,
     initial_prompt=None,
     returnDict: DictProxy | dict = {},
 ):
@@ -219,7 +221,7 @@ def _perform_whisper_transcription(
         )
 
         transcription_segments = transcription_with_progress_bar(
-            transcription_segments, info, GUI
+            transcription_segments, info, progress
         )
 
         transcript = {
@@ -244,7 +246,7 @@ def _perform_pyannote_speaker_diarization(
     audio_duration,
     required_models_dir,
     file_id,
-    GUI,
+    progress,
     min_speakers,
     max_speakers,
     audio_array,
@@ -264,7 +266,7 @@ def _perform_pyannote_speaker_diarization(
         "waveform": torch.from_numpy(audio_array[None, :]),
         "sample_rate": SAMPLING_RATE,
     }
-    with CustomProgressHook(GUI, current_step, total_steps) as hook:
+    with CustomProgressHook(progress, current_step, total_steps) as hook:
         diarization_segments = diarize_model(
             audio_array,
             min_speakers=min_speakers,
@@ -274,7 +276,8 @@ def _perform_pyannote_speaker_diarization(
 
     if current_step < total_steps:
         current_step = total_steps
-        GUI.progress_info(current_step, total_steps)
+        progress["current"] = current_step
+        progress["total"] = total_steps
     speaker_results = transform_speakers_results(diarization_segments)
     write_logfile("Transformed diarization segments to speaker results", file_id)
     del diarize_model
@@ -335,10 +338,10 @@ def _assign_word_speakers(diarize_df, transcript_result, fill_nearest=False):
 
 
 def _finish_transcription_create_output_files(
-    transcript, speaker_detection, file_id, GUI: EventSender
+    transcript, speaker_detection, file_id, progress: DictProxy
 ):
     """Create output files after transcription."""
-    GUI.task_info("Finish")
+    progress["task"] = "Finish"
     create_output_files(transcript, speaker_detection, file_id)
     write_logfile("No speaker detection. Created output files", file_id)
     add_processing_time_to_metadata(file_id)
@@ -357,16 +360,12 @@ def transcribe(
     timestamp,
     original_audio_filename,
     initial_prompt=None,
-    GUI: EventSender = None,
+    progress: DictProxy | dict = {},
     required_models_dir=MODELS_DIR,
 ):
     """Transcribes audio file with specified parameters."""
-    # import inside function for faster startup times in GUI app
 
-    if GUI is None:
-        GUI = EventSender()  # Initialize only if not provided
-
-    GUI.task_info("Prepare")
+    progress["task"] = "Prepare"
     write_logfile("Directory created", file_id)
 
     audio_array, audio_duration, device, min_speakers, max_speakers, language = (
@@ -403,7 +402,7 @@ def transcribe(
             language,
             file_id,
             model,
-            GUI,
+            progress,
             initial_prompt,
         )
     elif device == "cpu":
@@ -417,13 +416,13 @@ def transcribe(
             language,
             file_id,
             model,
-            GUI,
+            progress,
             initial_prompt,
         )
 
     if not speaker_detection:
         _finish_transcription_create_output_files(
-            transcript, speaker_detection, file_id, GUI
+            transcript, speaker_detection, file_id, progress
         )
 
     if speaker_detection:
@@ -431,14 +430,14 @@ def transcribe(
             audio_duration,
             required_models_dir,
             file_id,
-            GUI,
+            progress,
             min_speakers,
             max_speakers,
             audio_array,
             transcript,
         )
         _finish_transcription_create_output_files(
-            transcript_with_speaker, speaker_detection, file_id, GUI
+            transcript_with_speaker, speaker_detection, file_id, progress
         )
 
 
