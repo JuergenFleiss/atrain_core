@@ -30,6 +30,7 @@ dependencies = [
   "pyannote.audio==3.2.0",
   "numpy==1.26.4",
   "werkzeug==3.0.3",
+  "huggingface-hub==0.30.2",
   "torch==2.7.0+cu128; sys_platform == 'win32'",
   "torch==2.7.0+cu128; sys_platform == 'linux'",
   "torch==2.7.0; sys_platform == 'darwin'",
