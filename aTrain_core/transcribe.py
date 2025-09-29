@@ -3,7 +3,6 @@ from datetime import datetime
 from multiprocessing import Manager, Process
 from multiprocessing.managers import DictProxy
 from pathlib import Path
-from typing import Any, Mapping, Optional, Text
 
 import numpy as np
 import yaml
