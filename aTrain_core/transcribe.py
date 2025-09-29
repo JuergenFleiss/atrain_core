@@ -163,18 +163,18 @@ def run_transcription(
         raise error
 
 
-def transcription_with_progress_bar(transcription_segments, info, progress: DictProxy):
+def transcription_with_progress_bar(segments, info, progress: DictProxy):
     """Transcribes audio segments with progress bar."""
     total_duration = round(info.duration, 2)
     timestamps = 0.0  # to get the current segments
-    transcription_segments_new = []
+    segments_new = []
 
     with tqdm(
         total=total_duration, unit=" audio seconds", desc="Transcribing with Whisper"
     ) as pbar:
         progress["task"] = "Transcribe"
-        for segment in transcription_segments:
-            transcription_segments_new.append(segment)
+        for segment in segments:
+            segments_new.append(segment)
             progress["current"] = segment.end
             progress["total"] = total_duration
             pbar.update(segment.end - timestamps)
@@ -182,7 +182,7 @@ def transcription_with_progress_bar(transcription_segments, info, progress: Dict
         if timestamps < info.duration:  # silence at the end of the audio
             pbar.update(info.duration - timestamps)
 
-    return transcription_segments_new
+    return segments_new
 
 
 def run_transcription_in_process(
