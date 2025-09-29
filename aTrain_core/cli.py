@@ -3,7 +3,7 @@ from pathlib import Path
 from typer import Argument, Option, Typer
 from typing_extensions import Annotated
 
-from aTrain_core.check_inputs import ComputeType, Device, check_inputs_transcribe
+from aTrain_core.settings import ComputeType, Device, check_inputs_transcribe
 from aTrain_core.load_resources import (
     download_all_models,
     get_model,
