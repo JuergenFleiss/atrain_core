@@ -3,6 +3,11 @@ import os
 from importlib.resources import files
 from .load_resources import load_model_config_file
 from enum import StrEnum, auto
+from dataclasses import dataclass, field
+from aTrain_core.transcribe import transcribe
+from pathlib import Path
+from typing import BinaryIO
+from multiprocessing.managers import DictProxy
 
 
 class Device(StrEnum):
@@ -14,6 +19,25 @@ class ComputeType(StrEnum):
     INT8 = auto()
     FLOAT16 = auto()
     FLOAT32 = auto()
+
+
+transcribe
+
+
+@dataclass
+class Settings:
+    file: Path | BinaryIO
+    file_id: str
+    file_name: str
+    model: str
+    language: str
+    speaker_detection: bool
+    speaker_count: int
+    device: Device
+    compute_type: ComputeType
+    timestamp: str
+    initial_prompt: str | None = None
+    progress: dict | DictProxy = field(default_factory=dict)
 
 
 def check_inputs_transcribe(file, model, language, device):
