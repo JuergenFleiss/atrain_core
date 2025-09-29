@@ -249,9 +249,6 @@ def run_speaker_detection(
         )
     speaker_results = transform_speakers_results(diarization_segments)
     write_logfile("Transformed diarization segments", settings.file_id)
-    del diarize_model
-    gc.collect()
-    torch.cuda.empty_cache()
     transcript_with_speaker = assign_word_speakers(speaker_results, transcript)
     write_logfile("Assigned speakers to words", settings.file_id)
     return transcript_with_speaker
