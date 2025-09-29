@@ -3,7 +3,6 @@ from pathlib import Path
 from typer import Argument, Option, Typer
 from typing_extensions import Annotated
 
-from aTrain_core.settings import ComputeType, Device, check_inputs_transcribe
 from aTrain_core.load_resources import (
     download_all_models,
     get_model,
@@ -12,6 +11,7 @@ from aTrain_core.load_resources import (
 from aTrain_core.outputs import (
     delete_transcription,
 )
+from aTrain_core.settings import ComputeType, Device, Settings, check_inputs_transcribe
 from aTrain_core.transcribe import prepare_transcription
 from aTrain_core.transcribe import transcribe as _transcribe
 
@@ -40,7 +40,7 @@ def transcribe(
     language: Annotated[str, Option(help=LANGUAGE_HELP)] = "auto-detect",
     prompt: Annotated[str, Option(help=PROMPT_HELP)] = None,
     speaker_detection: Annotated[bool, Option(help=DIARIZE_HELP)] = False,
-    num_speakers: Annotated[int, Option(help=SPEAKER_HELP)] = 0,
+    speaker_count: Annotated[int, Option(help=SPEAKER_HELP)] = 0,
     device: Annotated[Device, Option(help=DEVICE_HELP)] = Device.CPU,
     compute_type: Annotated[ComputeType, Option(help=COMPUTE_HELP)] = ComputeType.INT8,
 ):
@@ -48,19 +48,20 @@ def transcribe(
     file, file_id, timestamp = prepare_transcription(file=file)
     try:
         check_inputs_transcribe(file, model, language, device)
-        _transcribe(
-            audio_file=file,
+        settings = Settings(
+            file=file,
             file_id=file_id,
+            file_name=file.name,
             model=model,
             language=language,
             speaker_detection=speaker_detection,
-            num_speakers="auto-detect" if num_speakers == 0 else num_speakers,
-            device=device.value,
-            compute_type=compute_type.value,
+            speaker_count=speaker_count,
+            device=device,
+            compute_type=compute_type,
             timestamp=timestamp,
-            original_audio_filename=file.name,
             initial_prompt=prompt,
         )
+        _transcribe(settings)
         print(FINISHED_TEXT)
     except Exception as e:
         delete_transcription(file_id)
