@@ -1,13 +1,13 @@
 import json
 import os
-from importlib.resources import files
-from .load_resources import load_model_config_file
-from enum import StrEnum, auto
 from dataclasses import dataclass, field
-from aTrain_core.transcribe import transcribe
+from enum import StrEnum, auto
+from importlib.resources import files
+from multiprocessing.managers import DictProxy
 from pathlib import Path
 from typing import BinaryIO
-from multiprocessing.managers import DictProxy
+
+from .load_resources import load_model_config_file
 
 
 class Device(StrEnum):
@@ -19,9 +19,6 @@ class ComputeType(StrEnum):
     INT8 = auto()
     FLOAT16 = auto()
     FLOAT32 = auto()
-
-
-transcribe
 
 
 @dataclass
@@ -46,11 +43,9 @@ def check_inputs_transcribe(file, model, language, device):
     file_correct = check_file(file)
     model_correct = check_model(model, language)
     language_correct = check_language(language)
-
-    if not file_correct and model_correct and language_correct:
-        raise ValueError(
-            "Incorrect input. Please check the file, model and language inputs."
-        )
+    device = check_device(device)
+    if not (file_correct and model_correct and language_correct):
+        raise ValueError("Incorrect input. Please check file, model and language.")
 
 
 def load_formats() -> list:
@@ -69,16 +64,14 @@ def check_file(filename):
 
 
 def check_device(device):
-    if device == "GPU":
+    if device == Device.GPU:
         from torch import cuda
 
         cuda_available = cuda.is_available()
         if cuda_available:
             return device
         else:
-            raise ValueError(
-                "GPU is not available. Please choose --device CPU instead."
-            )
+            raise ValueError("GPU is not available. Please choose CPU instead.")
 
 
 def check_model(model, language):
