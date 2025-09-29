@@ -7,7 +7,13 @@ from datetime import datetime
 import pandas as pd
 import yaml
 
-from .globals import LOG_FILENAME, METADATA_FILENAME, TIMESTAMP_FORMAT, TRANSCRIPT_DIR
+from aTrain_core.globals import (
+    LOG_FILENAME,
+    METADATA_FILENAME,
+    TIMESTAMP_FORMAT,
+    TRANSCRIPT_DIR,
+)
+from aTrain_core.settings import Settings
 
 
 def create_directory(file_id):
@@ -95,11 +101,11 @@ def create_srt_file(result, file_id):
             end_time = segment["end"]
             start_time_format = (
                 time.strftime("%H:%M:%S", time.gmtime(start_time))
-                + f",{round((start_time-int(start_time))*1000):03}"
+                + f",{round((start_time - int(start_time)) * 1000):03}"
             )
             end_time_format = (
                 time.strftime("%H:%M:%S", time.gmtime(end_time))
-                + f",{round((end_time-int(end_time))*1000):03}"
+                + f",{round((end_time - int(end_time)) * 1000):03}"
             )
             srt_file.write(f"{start_time_format} --> {end_time_format}\n")
             srt_file.write(f"{str(segment['text']).lstrip()}\n\n")
@@ -141,37 +147,27 @@ def isnamedtupleinstance(x):
     return all(type(i) == str for i in fields)
 
 
-def create_metadata(
-    file_id,
-    filename,
-    audio_duration,
-    model,
-    language,
-    speaker_detection,
-    num_speakers,
-    device,
-    compute_type,
-    timestamp,
-    original_audio_filename,
-):
+def create_metadata(settings: Settings, audio_duration: int):
     """Creates metadata file for the transcription."""
 
-    metadata_file_path = os.path.join(TRANSCRIPT_DIR, file_id, METADATA_FILENAME)
+    metadata_file_path = os.path.join(
+        TRANSCRIPT_DIR, settings.file_id, METADATA_FILENAME
+    )
     metadata = {
-        "file_id": file_id,
-        "filename": filename,
+        "file_id": settings.file_id,
+        "filename": settings.file_name,
         "audio_duration": audio_duration,
-        "model": model,
-        "language": language,
-        "speaker_detection": speaker_detection,
-        "num_speakers": num_speakers,
-        "device": device,
-        "compute_type": compute_type,
-        "timestamp": timestamp,
-        "path_to_audio_file": original_audio_filename,
+        "model": settings.model,
+        "language": settings.language,
+        "speaker_detection": settings.speaker_detection,
+        "num_speakers": settings.speaker_count,
+        "device": settings.device.value,
+        "compute_type": settings.compute_type.value,
+        "timestamp": settings.timestamp,
     }
     with open(metadata_file_path, "w", encoding="utf-8") as metadata_file:
         yaml.dump(metadata, metadata_file)
+    write_logfile("Metadata created", settings.file_id)
 
 
 def write_logfile(message, file_id):
