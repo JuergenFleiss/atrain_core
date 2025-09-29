@@ -61,7 +61,7 @@ class CustomProgressHook(ProgressHook):
         self.completed_steps = 0
         self.total_steps = total_steps
 
-    def __call__(self, step_name, step_artifact, file, total, completed):
+    def __call__(self, step_name, step_artifact, file=None, total=None, completed=None):
         super().__call__(step_name, step_artifact, file, total, completed)
         self._progress["task"] = "Detect Speakers"
         if self.step_name in ["speaker_counting", "discrete_diarization"]:
