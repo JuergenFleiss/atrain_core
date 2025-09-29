@@ -151,9 +151,7 @@ def run_transcription(
             initial_prompt=settings.initial_prompt,
         )
         segments = transcription_with_progress_bar(segments, info, settings.progress)
-        transcript = {
-            "segments": [named_tuple_to_dict(segment) for segment in segments]
-        }
+        transcript = {"segments": [named_tuple_to_dict(s) for s in segments]}
         write_logfile("Transcription successful", settings.file_id)
         if settings.device == Device.CPU:
             return transcript
@@ -244,7 +242,3 @@ def run_speaker_detection(
     transcript_with_speaker = assign_word_speakers(speaker_results, transcript)
     write_logfile("Assigned speakers to words", settings.file_id)
     return transcript_with_speaker
-
-
-if __name__ == "__main__":
-    ...
