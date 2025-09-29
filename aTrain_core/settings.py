@@ -12,7 +12,7 @@ from multiprocessing.managers import DictProxy
 
 class Device(StrEnum):
     CPU = auto()
-    CUDA = auto()
+    GPU = auto()
 
 
 class ComputeType(StrEnum):
