@@ -8,7 +8,7 @@ from multiprocessing.managers import DictProxy
 from huggingface_hub import file_download, snapshot_download
 from tqdm.auto import tqdm
 
-from .globals import MODELS_DIR, REQUIRED_MODELS
+from .globals import MODELS_DIR, REQUIRED_MODELS, REQUIRED_MODELS_DIR
 
 
 class custom_tqdm(tqdm):
@@ -51,13 +51,11 @@ def download_model(
 def get_model(
     model: str,
     progress: DictProxy | None = None,
-    models_dir=MODELS_DIR,
-    required_models_dir=MODELS_DIR,
 ) -> str:
     """Loads a specific model."""
     models_config = load_model_config_file()
     model_info = models_config[model]
-    models_dir = required_models_dir if model in REQUIRED_MODELS else models_dir
+    models_dir = REQUIRED_MODELS_DIR if model in REQUIRED_MODELS else MODELS_DIR
     model_path = os.path.join(models_dir, model)
     if not os.path.exists(model_path):
         download_model(model_path, model_info, progress)
