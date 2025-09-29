@@ -4,6 +4,7 @@ import shutil
 import time
 from datetime import datetime
 
+import numpy as np
 import pandas as pd
 import yaml
 
@@ -139,12 +140,12 @@ def isnamedtupleinstance(x):
     """Checks if the object is an instance of namedtuple."""
     _type = type(x)
     bases = _type.__bases__
-    if len(bases) != 1 or bases[0] != tuple:
+    if len(bases) != 1 or bases[0] is not tuple:
         return False
     fields = getattr(_type, "_fields", None)
     if not isinstance(fields, tuple):
         return False
-    return all(type(i) == str for i in fields)
+    return all(type(i) is str for i in fields)
 
 
 def create_metadata(settings: Settings, audio_duration: int):
@@ -203,3 +204,53 @@ def delete_transcription(file_id):
         shutil.rmtree(directory_name)
     if not os.path.exists(TRANSCRIPT_DIR):
         os.makedirs(TRANSCRIPT_DIR, exist_ok=True)
+
+
+def assign_word_speakers(diarize_df, transcript_result, fill_nearest=False):
+    """Assigns speakers to transcribed words.
+    Function is taken from whisperx -> see https://github.com/m-bain/whisperX.git
+    """
+    transcript_segments = transcript_result["segments"]
+    for seg in transcript_segments:
+        diarize_df["intersection"] = np.minimum(
+            diarize_df["end"], seg["end"]
+        ) - np.maximum(diarize_df["start"], seg["start"])
+        diarize_df["union"] = np.maximum(diarize_df["end"], seg["end"]) - np.minimum(
+            diarize_df["start"], seg["start"]
+        )
+        dia_tmp = (
+            diarize_df[diarize_df["intersection"] > 0]
+            if not fill_nearest
+            else diarize_df
+        )
+        if len(dia_tmp) > 0:
+            speaker = (
+                dia_tmp.groupby("speaker")["intersection"]
+                .sum()
+                .sort_values(ascending=False)
+                .index[0]
+            )
+            seg["speaker"] = speaker
+        if "words" in seg:
+            for word in seg["words"]:
+                if "start" in word:
+                    diarize_df["intersection"] = np.minimum(
+                        diarize_df["end"], word["end"]
+                    ) - np.maximum(diarize_df["start"], word["start"])
+                    diarize_df["union"] = np.maximum(
+                        diarize_df["end"], word["end"]
+                    ) - np.minimum(diarize_df["start"], word["start"])
+                    dia_tmp = (
+                        diarize_df[diarize_df["intersection"] > 0]
+                        if not fill_nearest
+                        else diarize_df
+                    )
+                    if len(dia_tmp) > 0:
+                        speaker = (
+                            dia_tmp.groupby("speaker")["intersection"]
+                            .sum()
+                            .sort_values(ascending=False)
+                            .index[0]
+                        )
+                        word["speaker"] = speaker
+    return transcript_result
