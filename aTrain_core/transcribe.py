@@ -1,4 +1,3 @@
-import gc
 import os
 from datetime import datetime
 from multiprocessing import Manager, Process
