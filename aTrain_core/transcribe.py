@@ -148,6 +148,7 @@ def run_transcription(
             no_speech_threshold=0.6,
             condition_on_previous_text=False if model_type == "distil" else True,
             initial_prompt=settings.initial_prompt,
+            temperature=settings.temperature,
         )
         segments = transcription_with_progress_bar(segments, info, settings.progress)
         transcript = {"segments": [named_tuple_to_dict(s) for s in segments]}

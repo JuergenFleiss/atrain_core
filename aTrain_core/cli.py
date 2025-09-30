@@ -23,6 +23,7 @@ SPEAKER_HELP = "Number of Speakers. Use '0' to let aTrain auto-detect speaker nu
 PROMPT_HELP = "Initial prompt passed to model"
 DEVICE_HELP = "Hardware used to transcribe"
 COMPUTE_HELP = "Data type used in computations"
+TEMP_HELP = "Temperature used for sampling"
 
 FINISHED_TEXT = """Thank you for using aTrain
 If you use aTrain in a scientific publication, please cite our paper:
@@ -43,6 +44,7 @@ def transcribe(
     speaker_count: Annotated[int, Option(help=SPEAKER_HELP)] = 0,
     device: Annotated[Device, Option(help=DEVICE_HELP)] = Device.CPU,
     compute_type: Annotated[ComputeType, Option(help=COMPUTE_HELP)] = ComputeType.INT8,
+    temperature: Annotated[float, Option(help=TEMP_HELP, min=0.0, max=1.0)] = 0.0,
 ):
     """Start transcription process for an audio file"""
     file, file_id, timestamp = prepare_transcription(file=file)
@@ -59,6 +61,7 @@ def transcribe(
             device=device,
             compute_type=compute_type,
             timestamp=timestamp,
+            temperature=temperature,
             initial_prompt=prompt,
         )
         _transcribe(settings)

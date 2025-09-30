@@ -33,6 +33,7 @@ class Settings:
     device: Device
     compute_type: ComputeType
     timestamp: str
+    temperature: float
     initial_prompt: str | None = None
     progress: dict | DictProxy = field(default_factory=dict)
 
