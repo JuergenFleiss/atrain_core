@@ -1,4 +1,5 @@
 import os
+import sys
 from datetime import datetime
 from multiprocessing import Manager, Process
 from multiprocessing.managers import DictProxy
@@ -169,6 +170,13 @@ def transcription_with_progress_bar(segments, info, progress: DictProxy):
     total_duration = round(info.duration, 2)
     timestamps = 0.0  # to get the current segments
     segments_new = []
+
+    # Using NullWriter as workaround for https://github.com/tqdm/tqdm/issues/794
+    class NullWriter:
+        def write(self, data): ...
+
+    sys.stdout = sys.stdout or NullWriter()
+    sys.stderr = sys.stderr or NullWriter()
 
     with tqdm(
         total=total_duration, unit=" audio seconds", desc="Transcribing with Whisper"
