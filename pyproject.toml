@@ -42,7 +42,7 @@ where = ["."]
 include = ["aTrain_core*"]
 
 [project.scripts]
-aTrain_core = "aTrain_core:cli"
+aTrain_core = "aTrain_core.cli:cli"
 
 [tool.setuptools.dynamic]
 version = { attr = "aTrain_core.version.__version__" }
