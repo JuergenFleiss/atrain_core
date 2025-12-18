@@ -34,7 +34,8 @@ dependencies = [
   "torch==2.7.0+cu128; sys_platform == 'win32'",
   "torch==2.7.0+cu128; sys_platform == 'linux'",
   "torch==2.7.0; sys_platform == 'darwin'",
-  "typer",
+  "typer==0.15.3",
+  "platformdirs==4.5.1",
 ]
 
 [tool.setuptools.packages.find]
