@@ -34,7 +34,7 @@ dependencies = [
   "torch==2.7.0+cu128; sys_platform == 'win32'",
   "torch==2.7.0+cu128; sys_platform == 'linux'",
   "torch==2.7.0; sys_platform == 'darwin'",
-  "typer==0.15.3",
+  "typer==0.16.0",
   "platformdirs==4.5.1",
 ]
 
