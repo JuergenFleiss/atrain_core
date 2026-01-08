@@ -1,14 +1,14 @@
 import json
-import os
 import shutil
 from functools import partial
 from importlib.resources import files
 from multiprocessing.managers import DictProxy
+from pathlib import Path
 
 from huggingface_hub import file_download, snapshot_download
 from tqdm.auto import tqdm
 
-from .globals import MODELS_DIR, REQUIRED_MODELS, REQUIRED_MODELS_DIR
+from aTrain_core.globals import MODELS_DIR, REQUIRED_MODELS, REQUIRED_MODELS_DIR
 
 
 class custom_tqdm(tqdm):
@@ -30,7 +30,7 @@ def download_all_models():
 
 
 def download_model(
-    model_path: str, model_info: dict, progress: DictProxy | None = None
+    model_path: Path, model_info: dict, progress: DictProxy | None = None
 ):
     if progress:
         # Monkey patching custom tqdm bar into the huggingface snapshot download
@@ -48,23 +48,20 @@ def download_model(
     )
 
 
-def get_model(
-    model: str,
-    progress: DictProxy | None = None,
-) -> str:
+def get_model(model: str, progress: DictProxy | None = None) -> Path:
     """Loads a specific model."""
     models_config = load_model_config_file()
     model_info = models_config[model]
     models_dir = REQUIRED_MODELS_DIR if model in REQUIRED_MODELS else MODELS_DIR
-    model_path = os.path.join(models_dir, model)
-    if not os.path.exists(model_path):
+    model_path = models_dir / model
+    if not model_path.exists():
         download_model(model_path, model_info, progress)
     return model_path
 
 
-def remove_model(model, models_dir=MODELS_DIR):
-    model_path = os.path.join(models_dir, model)
-    if os.path.exists(model_path):
+def remove_model(model: str, models_dir: Path = MODELS_DIR):
+    model_path = models_dir / model
+    if model_path.exists():
         shutil.rmtree(model_path)  # This deletes the directory and all its contents
 
 

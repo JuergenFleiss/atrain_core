@@ -34,7 +34,7 @@ from aTrain_core.step_estimator import calculate_steps
 
 class CustomPipeline(Pipeline):
     @classmethod
-    def from_pretrained(cls, model_path) -> Pipeline:
+    def from_pretrained(cls, model_path: Path) -> Pipeline:
         """Constructs a custom pipeline from pre-trained models."""
         config_yml = os.path.join(model_path, "config.yaml")
         with open(config_yml, "r") as config_file:
@@ -44,10 +44,10 @@ class CustomPipeline(Pipeline):
             pipeline_name, default_module_name="pyannote.pipeline.blocks"
         )
         params = config["pipeline"].get("params", {})
-        path_segmentation_model = os.path.join(model_path, "segmentation_pyannote.bin")
-        path_embedding_model = os.path.join(model_path, "embedding_pyannote.bin")
-        params["segmentation"] = path_segmentation_model.replace("\\", "/")
-        params["embedding"] = path_embedding_model.replace("\\", "/")
+        path_segmentation_model = model_path / "segmentation_pyannote.bin"
+        path_embedding_model = model_path / "embedding_pyannote.bin"
+        params["segmentation"] = path_segmentation_model.as_posix()
+        params["embedding"] = path_embedding_model.as_posix()
         pipeline: Pipeline = Klass(**params)
         pipeline.instantiate(config["params"])
         return pipeline
@@ -125,7 +125,7 @@ def load_audio(settings: Settings) -> tuple[np.ndarray, int]:
 
 def run_transcription(
     settings: Settings,
-    model_path: str,
+    model_path: Path,
     audio_array: np.ndarray,
     returnDict: DictProxy | dict = {},
 ) -> dict:
