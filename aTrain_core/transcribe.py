@@ -132,7 +132,7 @@ def run_transcription(
     """Run a transcription using a whisper model."""
     try:
         whisper_model = WhisperModel(
-            model_size_or_path=model_path,
+            model_size_or_path=model_path.as_posix(),
             device="cuda" if settings.device == Device.GPU else "cpu",
             compute_type=settings.compute_type.value,
         )
