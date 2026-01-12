@@ -39,7 +39,7 @@ def transcribe(
     file: Annotated[Path, Argument(help=FILE_HELP)],
     model: Annotated[str, Option(help=MODEL_HELP)] = "large-v3-turbo",
     language: Annotated[str, Option(help=LANGUAGE_HELP)] = "auto-detect",
-    prompt: Annotated[str, Option(help=PROMPT_HELP)] = None,
+    prompt: Annotated[str | None, Option(help=PROMPT_HELP)] = None,
     speaker_detection: Annotated[bool, Option(help=DIARIZE_HELP)] = False,
     speaker_count: Annotated[int, Option(help=SPEAKER_HELP)] = 0,
     device: Annotated[Device, Option(help=DEVICE_HELP)] = Device.CPU,

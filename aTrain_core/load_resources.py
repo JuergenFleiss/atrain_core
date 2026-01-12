@@ -37,7 +37,7 @@ def download_model(
         repo_size = model_info["repo_size"]
         progress["total"] = repo_size
         tqdm_bar = custom_tqdm(total=repo_size, progress=progress)
-        file_download.http_get = partial(file_download.http_get, _tqdm_bar=tqdm_bar)
+        file_download.http_get = partial(file_download.http_get, _tqdm_bar=tqdm_bar)  # ty: ignore
 
     snapshot_download(
         repo_id=model_info["repo_id"],
@@ -54,6 +54,8 @@ def get_model(model: str, progress: DictProxy | None = None) -> Path:
     model_info = models_config[model]
     models_dir = REQUIRED_MODELS_DIR if model in REQUIRED_MODELS else MODELS_DIR
     model_path = models_dir / model
+    if not isinstance(model_path, Path):
+        raise ValueError(f"Failed to resolve model path: {model_path}")
     if not model_path.exists():
         download_model(model_path, model_info, progress)
     return model_path
