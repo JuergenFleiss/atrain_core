@@ -39,6 +39,7 @@ class CustomProgressHook(ProgressHook):
 
     def __call__(self, step_name, step_artifact, file=None, total=None, completed=None):
         super().__call__(step_name, step_artifact, file, total, completed)
+        # TODO: Figure out how to get the number of embeddings steps already during segmentation
         self._progress["task"] = "Detect Speakers"
         if step_name == "segmentation":
             self._progress["current"] = 0
