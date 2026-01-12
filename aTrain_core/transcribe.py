@@ -27,27 +27,23 @@ from aTrain_core.outputs import (
     write_logfile,
 )
 from aTrain_core.settings import Device, Settings
-from aTrain_core.step_estimator import calculate_steps
 
 
 class CustomProgressHook(ProgressHook):
     """A custom progress hook that updates the GUI and prints progress information during processing."""
 
-    def __init__(self, progress: DictProxy | dict, total_steps):
+    def __init__(self, progress: DictProxy | dict):
         super().__init__()
         self._progress = progress
-        self.completed_steps = 0
-        self.total_steps = total_steps
 
     def __call__(self, step_name, step_artifact, file=None, total=None, completed=None):
         super().__call__(step_name, step_artifact, file, total, completed)
         self._progress["task"] = "Detect Speakers"
-        if self.step_name in ["speaker_counting", "discrete_diarization"]:
-            self.completed_steps += 1
-        if total and completed:
-            self.completed_steps += 1
-        self._progress["current"] = self.completed_steps
-        self._progress["total"] = self.total_steps
+        if step_name == "segmentation":
+            self._progress["current"] = 0
+        elif step_name == "embedding" and total and completed:
+            self._progress["current"] = completed
+            self._progress["total"] = total
 
 
 def prepare_transcription(file: Path) -> tuple[Path, str, str]:
@@ -210,7 +206,6 @@ def run_speaker_detection(
     """Run speaker detection using a pyannote.audio model"""
     import torch
 
-    total_steps: int = calculate_steps(audio_duration)
     model_path = get_model("speaker-detection")
     write_logfile("Speaker detection model loaded", settings.file_id)
 
@@ -240,7 +235,7 @@ def run_speaker_detection(
         "waveform": torch.from_numpy(audio_array[None, :]),
         "sample_rate": SAMPLING_RATE,
     }
-    with CustomProgressHook(settings.progress, total_steps) as hook:
+    with CustomProgressHook(settings.progress) as hook:
         diarization_segments = pipeline(
             audio,
             min_speakers=settings.speaker_count or None,
