@@ -4,7 +4,6 @@ from datetime import datetime
 from multiprocessing import Manager, Process
 from multiprocessing.managers import DictProxy
 from pathlib import Path
-from typing import BinaryIO
 
 import numpy as np
 from faster_whisper import WhisperModel
@@ -92,7 +91,7 @@ def load_audio(settings: Settings) -> tuple[np.ndarray, int]:
     try:
         if isinstance(settings.file, Path):
             file = settings.file.as_posix()
-        elif isinstance(settings.file, BinaryIO):
+        else:
             file = settings.file
         audio_array = decode_audio(file, sampling_rate=SAMPLING_RATE)
     except Exception as e:
