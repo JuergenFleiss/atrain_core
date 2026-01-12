@@ -39,13 +39,13 @@ class CustomProgressHook(ProgressHook):
 
     def __call__(self, step_name, step_artifact, file=None, total=None, completed=None):
         super().__call__(step_name, step_artifact, file, total, completed)
-        # TODO: Figure out how to get the number of embeddings steps already during segmentation
         self._progress["task"] = "Detect Speakers"
-        if step_name == "segmentation":
-            self._progress["current"] = 0
-        elif step_name == "embeddings" and total and completed:
+        if step_name == "segmentation" and total and completed:
             self._progress["current"] = completed
-            self._progress["total"] = total
+            self.grand_total = total * 2
+            self._progress["total"] = self.grand_total
+        elif step_name == "embeddings" and total and completed:
+            self._progress["current"] = (completed / total + 1) * self.grand_total / 2
 
 
 def prepare_transcription(file: Path) -> tuple[Path, str, str]:
