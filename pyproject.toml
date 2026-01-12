@@ -22,7 +22,7 @@ maintainers = [
 dynamic = ["version"]
 readme = "README.md"
 license = { file = "LICENSE" }
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 
 dependencies = [
   "faster-whisper==1.0.2",
