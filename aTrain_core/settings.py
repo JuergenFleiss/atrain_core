@@ -80,7 +80,8 @@ def check_model(model, language):
 
     all_model_configs = load_model_config_file()
     all_models = set(all_model_configs.keys())
-    all_models.remove("diarize")
+    all_models.discard("speaker-detection")
+    all_models.discard("diarize")
 
     model_available = model in all_models
 
