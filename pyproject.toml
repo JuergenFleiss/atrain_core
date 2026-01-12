@@ -26,14 +26,14 @@ requires-python = ">=3.10"
 
 dependencies = [
   "faster-whisper==1.0.2",
-  "pandas",
-  "pyannote.audio==3.2.0",
-  "numpy==1.26.4",
+  "pandas==2.3.3",
+  "pyannote.audio==4.0.3",
+  "numpy==2.2.2",
   "werkzeug==3.0.3",
   "huggingface-hub==0.30.2",
-  "torch==2.7.0+cu128; sys_platform == 'win32'",
-  "torch==2.7.0+cu128; sys_platform == 'linux'",
-  "torch==2.7.0; sys_platform == 'darwin'",
+  "torch==2.8.0+cu128; sys_platform == 'win32'",
+  "torch==2.8.0+cu128; sys_platform == 'linux'",
+  "torch==2.8.0; sys_platform == 'darwin'",
   "typer==0.16.0",
   "platformdirs==4.5.1",
 ]
