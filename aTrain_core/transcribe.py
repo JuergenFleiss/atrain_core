@@ -4,14 +4,13 @@ from datetime import datetime
 from multiprocessing import Manager, Process
 from multiprocessing.managers import DictProxy
 from pathlib import Path
+from typing import BinaryIO
 
 import numpy as np
-import yaml
 from faster_whisper import WhisperModel
 from faster_whisper.audio import decode_audio
-from pyannote.audio import Pipeline
+from pyannote.audio.pipelines.speaker_diarization import SpeakerDiarization
 from pyannote.audio.pipelines.utils.hook import ProgressHook
-from pyannote.core.utils.helper import get_class_by_name
 from tqdm import tqdm
 from werkzeug.utils import secure_filename
 
@@ -32,31 +31,10 @@ from aTrain_core.settings import Device, Settings
 from aTrain_core.step_estimator import calculate_steps
 
 
-class CustomPipeline(Pipeline):
-    @classmethod
-    def from_pretrained(cls, model_path: Path) -> Pipeline:
-        """Constructs a custom pipeline from pre-trained models."""
-        config_yml = os.path.join(model_path, "config.yaml")
-        with open(config_yml, "r") as config_file:
-            config = yaml.load(config_file, Loader=yaml.SafeLoader)
-        pipeline_name = config["pipeline"]["name"]
-        Klass = get_class_by_name(
-            pipeline_name, default_module_name="pyannote.pipeline.blocks"
-        )
-        params = config["pipeline"].get("params", {})
-        path_segmentation_model = model_path / "segmentation_pyannote.bin"
-        path_embedding_model = model_path / "embedding_pyannote.bin"
-        params["segmentation"] = path_segmentation_model.as_posix()
-        params["embedding"] = path_embedding_model.as_posix()
-        pipeline: Pipeline = Klass(**params)
-        pipeline.instantiate(config["params"])
-        return pipeline
-
-
 class CustomProgressHook(ProgressHook):
     """A custom progress hook that updates the GUI and prints progress information during processing."""
 
-    def __init__(self, progress: DictProxy, total_steps):
+    def __init__(self, progress: DictProxy | dict, total_steps):
         super().__init__()
         self._progress = progress
         self.completed_steps = 0
@@ -98,7 +76,7 @@ def transcribe(settings: Settings):
     elif settings.device == Device.CPU:
         write_logfile("Transcribing in same process", settings.file_id)
         transcript = run_transcription(settings, model_path, audio_array)
-    if settings.speaker_detection:
+    if settings.speaker_detection and transcript:
         transcript = run_speaker_detection(
             settings, audio_duration, audio_array, transcript
         )
@@ -112,7 +90,11 @@ def transcribe(settings: Settings):
 def load_audio(settings: Settings) -> tuple[np.ndarray, int]:
     """Load the audio and calculate audio duration"""
     try:
-        audio_array = decode_audio(settings.file, sampling_rate=SAMPLING_RATE)
+        if isinstance(settings.file, Path):
+            file = settings.file.as_posix()
+        elif isinstance(settings.file, BinaryIO):
+            file = settings.file
+        audio_array = decode_audio(file, sampling_rate=SAMPLING_RATE)
     except Exception as e:
         write_logfile(f"File or path invalid: {e}", settings.file_id)
         raise Exception("""Check file & path: File either has no audio or the name of the file path or file includes spaces. 
@@ -128,7 +110,7 @@ def run_transcription(
     model_path: Path,
     audio_array: np.ndarray,
     returnDict: DictProxy | dict = {},
-) -> dict:
+) -> dict | None:
     """Run a transcription using a whisper model."""
     try:
         whisper_model = WhisperModel(
@@ -165,7 +147,7 @@ def run_transcription(
         raise error
 
 
-def transcription_with_progress_bar(segments, info, progress: DictProxy):
+def transcription_with_progress_bar(segments, info, progress: DictProxy | dict):
     """Transcribes audio segments with progress bar."""
     total_duration = round(info.duration, 2)
     timestamps = 0.0  # to get the current segments
@@ -195,8 +177,8 @@ def transcription_with_progress_bar(segments, info, progress: DictProxy):
 
 
 def run_transcription_in_process(
-    settings: Settings, model_path: str, audio_array: np.ndarray
-):
+    settings: Settings, model_path: Path, audio_array: np.ndarray
+) -> dict:
     """Run a transcription in a seperate process.
     This is a workaround to deal with a termination issue: https://github.com/guillaumekln/faster-whisper/issues/71"""
     with Manager() as manager:
@@ -225,22 +207,43 @@ def run_transcription_in_process(
 
 def run_speaker_detection(
     settings: Settings, audio_duration: int, audio_array: np.ndarray, transcript: dict
-):
+) -> dict:
     """Run speaker detection using a pyannote.audio model"""
     import torch
 
-    total_steps = calculate_steps(audio_duration)
-    model_path = get_model("diarize")
+    total_steps: int = calculate_steps(audio_duration)
+    model_path = get_model("speaker-detection")
     write_logfile("Speaker detection model loaded", settings.file_id)
-    diarize_model = CustomPipeline.from_pretrained(model_path).to(torch.device("cpu"))
+
+    segmentation = model_path / "segmentation"
+    embedding = model_path / "embedding"
+    plda = model_path / "plda"
+    params = {
+        "clustering": {"threshold": 0.6, "Fa": 0.07, "Fb": 0.8},
+        "segmentation": {"min_duration_off": 0.0},
+    }
+
+    pipeline = SpeakerDiarization(
+        legacy=True,
+        segmentation=segmentation.as_posix(),
+        segmentation_batch_size=32,
+        embedding=embedding.as_posix(),
+        embedding_batch_size=32,
+        embedding_exclude_overlap=True,
+        plda=plda.as_posix(),
+        clustering="VBxClustering",
+    )
+    pipeline = pipeline.instantiate(params)
+    pipeline = pipeline.to(torch.device("cpu"))
+
     write_logfile("Detecting speakers", settings.file_id)
-    audio_array = {
+    audio = {
         "waveform": torch.from_numpy(audio_array[None, :]),
         "sample_rate": SAMPLING_RATE,
     }
     with CustomProgressHook(settings.progress, total_steps) as hook:
-        diarization_segments = diarize_model(
-            audio_array,
+        diarization_segments = pipeline(
+            audio,
             min_speakers=settings.speaker_count or None,
             max_speakers=settings.speaker_count or None,
             hook=hook,
