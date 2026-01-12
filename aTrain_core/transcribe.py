@@ -41,7 +41,7 @@ class CustomProgressHook(ProgressHook):
         self._progress["task"] = "Detect Speakers"
         if step_name == "segmentation":
             self._progress["current"] = 0
-        elif step_name == "embedding" and total and completed:
+        elif step_name == "embeddings" and total and completed:
             self._progress["current"] = completed
             self._progress["total"] = total
 
