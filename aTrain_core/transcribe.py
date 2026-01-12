@@ -8,7 +8,8 @@ from pathlib import Path
 import numpy as np
 from faster_whisper import WhisperModel
 from faster_whisper.audio import decode_audio
-from pyannote.audio.pipelines.speaker_diarization import SpeakerDiarization
+from pyannote.audio import Pipeline
+from pyannote.audio.pipelines.speaker_diarization import DiarizeOutput
 from pyannote.audio.pipelines.utils.hook import ProgressHook
 from tqdm import tqdm
 from werkzeug.utils import secure_filename
@@ -208,41 +209,20 @@ def run_speaker_detection(
 
     model_path = get_model("speaker-detection")
     write_logfile("Speaker detection model loaded", settings.file_id)
-
-    segmentation = model_path / "segmentation"
-    embedding = model_path / "embedding"
-    plda = model_path / "plda"
-    params = {
-        "clustering": {"threshold": 0.6, "Fa": 0.07, "Fb": 0.8},
-        "segmentation": {"min_duration_off": 0.0},
-    }
-
-    pipeline = SpeakerDiarization(
-        legacy=True,
-        segmentation=segmentation.as_posix(),
-        segmentation_batch_size=32,
-        embedding=embedding.as_posix(),
-        embedding_batch_size=32,
-        embedding_exclude_overlap=True,
-        plda=plda.as_posix(),
-        clustering="VBxClustering",
-    )
-    pipeline = pipeline.instantiate(params)
-    pipeline = pipeline.to(torch.device("cpu"))
-
-    write_logfile("Detecting speakers", settings.file_id)
     audio = {
         "waveform": torch.from_numpy(audio_array[None, :]),
         "sample_rate": SAMPLING_RATE,
     }
+    pipeline = Pipeline.from_pretrained(model_path)
+    if not pipeline:
+        raise Exception("Failed to initialize speaker detection pipeline!")
+    write_logfile("Detecting speakers", settings.file_id)
     with CustomProgressHook(settings.progress) as hook:
-        diarization_segments = pipeline(
-            audio,
-            min_speakers=settings.speaker_count or None,
-            max_speakers=settings.speaker_count or None,
-            hook=hook,
+        output: DiarizeOutput = pipeline(
+            audio, num_speakers=settings.speaker_count, hook=hook
         )
-    speaker_results = transform_speakers_results(diarization_segments)
+    segments = output.speaker_diarization
+    speaker_results = transform_speakers_results(segments)
     write_logfile("Transformed diarization segments", settings.file_id)
     transcript_with_speaker = assign_word_speakers(speaker_results, transcript)
     write_logfile("Assigned speakers to words", settings.file_id)
