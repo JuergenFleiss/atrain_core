@@ -7,7 +7,7 @@ MODELS_DIR = ATRAIN_DIR / "models"
 REQUIRED_MODELS_DIR = (
     files("aTrain") / "required_models" if find_spec("aTrain") else MODELS_DIR
 )
-REQUIRED_MODELS = ["diarize", "large-v3-turbo"]
+REQUIRED_MODELS = ["speaker-detection", "large-v3-turbo"]
 TRANSCRIPT_DIR = ATRAIN_DIR / "transcriptions"
 METADATA_FILENAME = "metadata.txt"
 LOG_FILENAME = "log.txt"
