@@ -41,9 +41,9 @@ class CustomProgressHook(ProgressHook):
         super().__call__(step_name, step_artifact, file, total, completed)
         self._progress["task"] = "Detect Speakers"
         if step_name == "segmentation" and total and completed:
-            self._progress["current"] = completed
             self.grand_total = total * 2
             self._progress["total"] = self.grand_total
+            self._progress["current"] = completed
         elif step_name == "embeddings" and total and completed:
             self._progress["current"] = (completed / total + 1) * self.grand_total / 2
 
