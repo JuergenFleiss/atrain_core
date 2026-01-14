@@ -54,8 +54,6 @@ def get_model(model: str, progress: DictProxy | None = None) -> Path:
     model_info = models_config[model]
     models_dir = REQUIRED_MODELS_DIR if model in REQUIRED_MODELS else MODELS_DIR
     model_path = models_dir / model
-    if not isinstance(model_path, Path):
-        raise ValueError(f"Failed to resolve model path: {model_path}")
     if not model_path.exists():
         download_model(model_path, model_info, progress)
     return model_path
