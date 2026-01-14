@@ -77,7 +77,6 @@ def transcribe(settings: Settings):
         transcript = run_speaker_detection(
             settings, audio_duration, audio_array, transcript
         )
-    settings.progress["task"] = "Finish"
     create_output_files(transcript, settings.speaker_detection, settings.file_id)
     write_logfile("No speaker detection. Created output files", settings.file_id)
     add_processing_time_to_metadata(settings.file_id)
