@@ -11,7 +11,6 @@ if find_spec("aTrain"):
     REQUIRED_MODELS_DIR = cast(Path, files("aTrain") / "required_models")
 else:
     REQUIRED_MODELS_DIR = MODELS_DIR
-print(REQUIRED_MODELS_DIR, type(REQUIRED_MODELS_DIR))
 REQUIRED_MODELS = ["speaker-detection", "large-v3-turbo"]
 TRANSCRIPT_DIR = ATRAIN_DIR / "transcriptions"
 METADATA_FILENAME = "metadata.txt"
