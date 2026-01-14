@@ -29,7 +29,7 @@ class Settings:
     model: str
     language: str
     speaker_detection: bool
-    speaker_count: int
+    speaker_count: int | None
     device: Device
     compute_type: ComputeType
     timestamp: str
