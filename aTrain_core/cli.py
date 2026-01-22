@@ -1,153 +1,92 @@
-import argparse
-import os
-import traceback
-from datetime import datetime
+from pathlib import Path
 
-from werkzeug.utils import secure_filename
+from typer import Argument, Option, Typer
+from typing_extensions import Annotated
 
-from .check_inputs import check_inputs_transcribe
-from .globals import TIMESTAMP_FORMAT, MODELS_DIR
-from .load_resources import download_all_models, get_model, remove_model
-from .outputs import (
-    create_directory,
-    create_file_id,
-    delete_transcription,
-    write_logfile,
+from aTrain_core.load_resources import (
+    download_all_models,
+    get_model,
+    remove_model,
 )
-from .transcribe import transcribe
+from aTrain_core.outputs import (
+    delete_transcription,
+)
+from aTrain_core.settings import ComputeType, Device, Settings, check_inputs_transcribe
+from aTrain_core.transcribe import prepare_transcription
+from aTrain_core.transcribe import transcribe as _transcribe
+
+FILE_HELP = "Audio file to be transcribed"
+MODEL_HELP = "Model used to transcribe"
+LANGUAGE_HELP = "Language of the audio"
+DIARIZE_HELP = "Enable speaker detection"
+SPEAKER_HELP = "Number of Speakers. Use '0' to let aTrain auto-detect speaker number."
+PROMPT_HELP = "Initial prompt passed to model"
+DEVICE_HELP = "Hardware used to transcribe"
+COMPUTE_HELP = "Data type used in computations"
+TEMP_HELP = "Temperature used for sampling"
+
+FINISHED_TEXT = """Thank you for using aTrain
+If you use aTrain in a scientific publication, please cite our paper:
+'Take the aTrain. Introducing an interface for the Accessible Transcription of Interviews'
+available under: https://doi.org/10.1016/j.jbef.2024.100891"""
 
 
-def link(uri, label=None):
-    if label is None:
-        label = uri
-    parameters = ""
-
-    # OSC 8 ; params ; URI ST <name> OSC 8 ;; ST
-    escape_mask = "\033]8;{};{}\033\\{}\033]8;;\033\\"
-
-    return escape_mask.format(parameters, uri, label)
+cli = Typer(help="CLI for aTrain_core")
 
 
-def cli():
-    """Command-line interface for running audio transcription with Whisper using aTrain_core."""
+@cli.command()
+def transcribe(
+    file: Annotated[Path, Argument(help=FILE_HELP)],
+    model: Annotated[str, Option(help=MODEL_HELP)] = "large-v3-turbo",
+    language: Annotated[str, Option(help=LANGUAGE_HELP)] = "auto-detect",
+    prompt: Annotated[str | None, Option(help=PROMPT_HELP)] = None,
+    speaker_detection: Annotated[bool, Option(help=DIARIZE_HELP)] = False,
+    speaker_count: Annotated[int, Option(help=SPEAKER_HELP)] = 0,
+    device: Annotated[Device, Option(help=DEVICE_HELP)] = Device.CPU,
+    compute_type: Annotated[ComputeType, Option(help=COMPUTE_HELP)] = ComputeType.INT8,
+    temperature: Annotated[float, Option(help=TEMP_HELP, min=0.0, max=1.0)] = 0.0,
+):
+    """Start transcription process for an audio file"""
+    file, file_id, timestamp = prepare_transcription(file=file)
+    try:
+        check_inputs_transcribe(file, model, language, device)
+        settings = Settings(
+            file=file,
+            file_id=file_id,
+            file_name=file.name,
+            model=model,
+            language=language,
+            speaker_detection=speaker_detection,
+            speaker_count=speaker_count,
+            device=device,
+            compute_type=compute_type,
+            timestamp=timestamp,
+            temperature=temperature,
+            initial_prompt=prompt,
+        )
+        _transcribe(settings)
+        print(FINISHED_TEXT)
+    except Exception as e:
+        delete_transcription(file_id)
+        raise e
 
-    parser = argparse.ArgumentParser(
-        prog="aTrain_core",
-        description="A CLI tool for audio transcription with Whisper",
-    )
-    subparsers = parser.add_subparsers(
-        dest="command", help="Command for aTrain_core to perform."
-    )
 
-    # Subparser for 'load' command
-    parser_load = subparsers.add_parser(
-        "load", help="Initialize aTrain_core by downloading models"
-    )
-    parser_load.add_argument("--model", help="Model to download")
+@cli.command()
+def load(model: Annotated[str, Argument(help="Model to download")]):
+    """Download a specified transcription model"""
+    if model == "all":
+        download_all_models()
+        print("All models downloaded")
+    else:
+        get_model(model)
+        print(f"Model {model} downloaded")
 
-    # Subparser for 'remove' command
-    parser_remove = subparsers.add_parser("remove", help="Remove models")
-    parser_remove.add_argument("--model", help="Model to remove")
 
-    # Subparser for 'transcribe' command
-    parser_transcribe = subparsers.add_parser(
-        "transcribe", help="Start transcription process for an audio file"
-    )
-    parser_transcribe.add_argument("audiofile", help="Path to the audio file")
-    parser_transcribe.add_argument(
-        "--model", default="large-v3", help="Model to use for transcription"
-    )
-    parser_transcribe.add_argument(
-        "--language", default="auto-detect", help="Language of the audio"
-    )
-    parser_transcribe.add_argument(
-        "--speaker_detection",
-        default=False,
-        action="store_true",
-        help="Enable speaker detection",
-    )
-    parser_transcribe.add_argument(
-        "--num_speakers", default="auto-detect", help="Number of speakers"
-    )
-    parser_transcribe.add_argument(
-        "--prompt",
-        default=None,
-        help="Initial prompt to guide the style of the transcription.",
-    )
-    parser_transcribe.add_argument(
-        "--device",
-        default="CPU",
-        choices=["CPU", "GPU"],
-        help="Device to use (CPU/GPU)",
-    )
-    parser_transcribe.add_argument(
-        "--compute_type",
-        default="int8",
-        choices=["float16", "int8", "float32"],
-        help="Compute type (float16/float32/int8)",
-    )
-
-    args = parser.parse_args()
-
-    if args.command == "load":
-        if args.model == "all":
-            download_all_models()
-            print("All models downloaded")
-        else:
-            get_model(args.model)
-            print(f"Model {args.model} downloaded")
-
-    elif args.command == "remove":
-        remove_model(args.model)
-        print(f"Model {args.model} removed")
-
-    elif args.command == "transcribe":
-        print("Running aTrain_core")
-        timestamp = datetime.now().strftime(TIMESTAMP_FORMAT)
-
-        dir_name = os.path.dirname(args.audiofile)
-        file_base_name = os.path.basename(args.audiofile)
-
-        # Secure the base name (remove unsafe characters)
-        secure_file_base_name = secure_filename(file_base_name)
-
-        # Join the directory path with the secure base name to get the full path
-        filename = os.path.join(dir_name, secure_file_base_name)
-        print(f"file name: {filename}")
-        print(f"file type: {type(filename)}")
-
-        file_id = create_file_id(filename, timestamp)
-        create_directory(file_id)
-
-        original_file_name = args.audiofile
-        write_logfile(f"File ID created: {file_id}", file_id)
-
-        try:
-            check_inputs_transcribe(filename, args.model, args.language, args.device)
-            transcribe(
-                audio_file=filename,
-                file_id=file_id,
-                model=args.model,
-                language=args.language,
-                speaker_detection=args.speaker_detection,
-                num_speakers=args.num_speakers,
-                device=args.device,
-                compute_type=args.compute_type,
-                timestamp=timestamp,
-                original_audio_filename=original_file_name,
-                initial_prompt=args.prompt,
-                GUI=None,
-                required_models_dir=MODELS_DIR,
-            )
-            print(
-                f"Thank you for using aTrain \nIf you use aTrain in a scientific publication, please cite our paper:\n'Take the aTrain. Introducing an interface for the Accessible Transcription of Interviews'\navailable under: {link('https://www.sciencedirect.com/science/article/pii/S2214635024000066')}"
-            )
-        except Exception as error:
-            delete_transcription(file_id)
-            traceback_str = traceback.format_exc()
-            error = str(error)
-            print(f"The following error has occured: {error}")
-            print(f"Traceback: {traceback_str}")
+@cli.command()
+def remove(model: Annotated[str, Argument(help="Model to remove")]):
+    """Remove a specified transcription model"""
+    remove_model(model)
+    print(f"Model {model} removed")
 
 
 if __name__ == "__main__":

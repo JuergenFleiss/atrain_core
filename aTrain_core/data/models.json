@@ -55,11 +55,11 @@
         "repo_size": 1621440951,
         "repo_size_human": "1.62 GB"
     },
-    "diarize": {
-        "repo_id": "aTrain-core/diarize",
-        "revision": "af59b6c3c3261a53bbfb1d78d36a10fcd8de3084",
-        "repo_size": 114104711,
-        "repo_size_human": "114.10 MB"
+    "speaker-detection": {
+        "repo_id": "aTrain-core/speaker-detection",
+        "revision": "027e7a80b40a5e3e69cb83ccf901725b59a4063d",
+        "repo_size": 33695573,
+        "repo_size_human": "32.1 MB"
     },
     "faster-distil-english": {
         "repo_id": "aTrain-core/faster-distil-whisper-large-v2",

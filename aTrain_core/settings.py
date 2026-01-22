@@ -1,7 +1,41 @@
 import json
 import os
+from dataclasses import dataclass, field
+from enum import StrEnum, auto
 from importlib.resources import files
+from multiprocessing.managers import DictProxy
+from pathlib import Path
+from typing import BinaryIO
+
 from .load_resources import load_model_config_file
+
+
+class Device(StrEnum):
+    CPU = auto()
+    GPU = auto()
+
+
+class ComputeType(StrEnum):
+    INT8 = auto()
+    FLOAT16 = auto()
+    FLOAT32 = auto()
+
+
+@dataclass
+class Settings:
+    file: Path | BinaryIO
+    file_id: str
+    file_name: str
+    model: str
+    language: str
+    speaker_detection: bool
+    speaker_count: int | None
+    device: Device
+    compute_type: ComputeType
+    timestamp: str
+    temperature: float
+    initial_prompt: str | None = None
+    progress: dict | DictProxy = field(default_factory=dict)
 
 
 def check_inputs_transcribe(file, model, language, device):
@@ -10,11 +44,9 @@ def check_inputs_transcribe(file, model, language, device):
     file_correct = check_file(file)
     model_correct = check_model(model, language)
     language_correct = check_language(language)
-
-    if not file_correct and model_correct and language_correct:
-        raise ValueError(
-            "Incorrect input. Please check the file, model and language inputs."
-        )
+    device = check_device(device)
+    if not (file_correct and model_correct and language_correct):
+        raise ValueError("Incorrect input. Please check file, model and language.")
 
 
 def load_formats() -> list:
@@ -33,16 +65,14 @@ def check_file(filename):
 
 
 def check_device(device):
-    if device == "GPU":
+    if device == Device.GPU:
         from torch import cuda
 
         cuda_available = cuda.is_available()
         if cuda_available:
             return device
         else:
-            raise ValueError(
-                "GPU is not available. Please choose --device CPU instead."
-            )
+            raise ValueError("GPU is not available. Please choose CPU instead.")
 
 
 def check_model(model, language):
@@ -50,7 +80,8 @@ def check_model(model, language):
 
     all_model_configs = load_model_config_file()
     all_models = set(all_model_configs.keys())
-    all_models.remove("diarize")
+    all_models.discard("speaker-detection")
+    all_models.discard("diarize")
 
     model_available = model in all_models
 
