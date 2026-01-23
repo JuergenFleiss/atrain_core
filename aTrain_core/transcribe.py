@@ -127,7 +127,9 @@ def run_transcription(
             no_speech_threshold=0.6,
             condition_on_previous_text=False if model_type == "distil" else True,
             initial_prompt=settings.initial_prompt,
-            temperature=settings.temperature,
+            temperature=[0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
+            if settings.temperature is None
+            else settings.temperature,
         )
         segments = transcription_with_progress_bar(segments, info, settings.progress)
         transcript = {"segments": [named_tuple_to_dict(s) for s in segments]}
@@ -220,7 +222,7 @@ def run_speaker_detection(
 
     if settings.device == Device.GPU:
         pipeline.to(torch.device("cuda"))
-    
+
     with CustomProgressHook(settings.progress) as hook:
         output: DiarizeOutput = pipeline(
             audio, num_speakers=settings.speaker_count, hook=hook

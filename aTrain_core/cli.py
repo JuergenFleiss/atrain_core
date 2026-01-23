@@ -44,7 +44,9 @@ def transcribe(
     speaker_count: Annotated[int, Option(help=SPEAKER_HELP)] = 0,
     device: Annotated[Device, Option(help=DEVICE_HELP)] = Device.CPU,
     compute_type: Annotated[ComputeType, Option(help=COMPUTE_HELP)] = ComputeType.INT8,
-    temperature: Annotated[float, Option(help=TEMP_HELP, min=0.0, max=1.0)] = 0.0,
+    temperature: Annotated[
+        float | None, Option(help=TEMP_HELP, min=0.0, max=1.0)
+    ] = None,
 ):
     """Start transcription process for an audio file"""
     file, file_id, timestamp = prepare_transcription(file=file)
