@@ -217,6 +217,10 @@ def run_speaker_detection(
     if not pipeline:
         raise Exception("Failed to initialize speaker detection pipeline!")
     write_logfile("Detecting speakers", settings.file_id)
+
+    if settings.device == Device.GPU:
+        pipeline.to(torch.device("cuda"))
+    
     with CustomProgressHook(settings.progress) as hook:
         output: DiarizeOutput = pipeline(
             audio, num_speakers=settings.speaker_count, hook=hook
