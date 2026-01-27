@@ -141,8 +141,10 @@ def run_transcription(
             os._exit(0)
 
     except Exception as error:
-        returnDict["error"] = error
-        raise error
+        if settings.device == Device.CPU:
+            raise error
+        elif settings.device == Device.GPU:
+            returnDict["error"] = error
 
 
 def transcription_with_progress_bar(segments, info, progress: DictProxy | dict):
