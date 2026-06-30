@@ -1,3 +1,8 @@
+# ATTENTION: This repository has been merged into https://github.com/aTrainTranscription/aTrain with https://github.com/aTrainTranscription/aTrain/pull/205
+#
+#
+#
+
 <img src="https://github.com/BANDAS-Center/aTrain/blob/main/docs/images/logo.svg" width="300" alt="Logo">
 
 ## Tl;dr
